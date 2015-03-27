@@ -1,34 +1,40 @@
 package com.flipkart.foxtrot.client;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
+import com.flipkart.foxtrot.client.selectors.RandomSelector;
+import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
+import com.flipkart.foxtrot.client.senders.QueuedSender;
+import com.google.common.base.Strings;
+
+import java.util.List;
 
 public class FoxtrotClient {
-    private final MemberSelector selector;
-    private ScheduledExecutorService executorService;
-    private AtomicReference<FoxtrotClusterStatus> status = new AtomicReference<>();
+    private final FoxtrotCluster foxtrotCluster;
+    private final EventSender eventSender;
 
-    public FoxtrotClient(FoxtrotClientConfig config, MemberSelector selector) throws Exception {
-        this.selector = selector;
-        executorService = Executors.newScheduledThreadPool(1);
-        ClusterStatusUpdater updater = ClusterStatusUpdater.create(config, status);
-        executorService.scheduleWithFixedDelay(updater, 0, config.getRefreshInterval(), TimeUnit.SECONDS);
+    public FoxtrotClient(FoxtrotClientConfig config) throws Exception {
+        this.foxtrotCluster = new FoxtrotCluster(config);
+        this.eventSender = (Strings.isNullOrEmpty(config.getLocalQueuePath())
+                                ? new HttpSyncEventSender(config.getAppName(), foxtrotCluster)
+                                : new QueuedSender(config.getAppName(), foxtrotCluster,
+                                                    config.getLocalQueuePath(), config.getBatchSize()));
     }
 
-    public FoxtrotClusterMember clusterMember() {
-        if(null == status) {
-            return null;
-        }
-        FoxtrotClusterStatus foxtrotClusterStatus = status.get();
-        if(null == foxtrotClusterStatus || foxtrotClusterStatus.getMembers().isEmpty()) {
-            return null;
-        }
-        return selector.selectMember(foxtrotClusterStatus.getMembers());
+    public FoxtrotClient(FoxtrotClientConfig config, EventSender eventSender) throws Exception {
+        this.foxtrotCluster = new FoxtrotCluster(config, new RandomSelector());
+        this.eventSender = eventSender;
     }
 
-    public void stop() {
-        executorService.shutdown();
+    public void send(Document document) throws Exception {
+        eventSender.send(document);
+    }
+
+    public void send(List<Document> documents) throws Exception {
+        eventSender.send(documents);
+    }
+
+    public void close() throws Exception {
+        eventSender.close();
+        foxtrotCluster.stop();
     }
 }

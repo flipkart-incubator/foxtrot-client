@@ -1,6 +1,6 @@
 package com.flipkart.foxtrot.client.selectors;
 
-import com.flipkart.foxtrot.client.FoxtrotClusterMember;
+import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.MemberSelector;
 
 import java.util.List;

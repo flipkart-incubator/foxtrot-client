@@ -1,4 +1,4 @@
-package com.flipkart.foxtrot.client;
+package com.flipkart.foxtrot.client.cluster;
 
 import com.google.common.collect.ImmutableList;
 

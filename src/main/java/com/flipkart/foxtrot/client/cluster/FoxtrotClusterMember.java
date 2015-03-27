@@ -1,4 +1,4 @@
-package com.flipkart.foxtrot.client;
+package com.flipkart.foxtrot.client.cluster;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
