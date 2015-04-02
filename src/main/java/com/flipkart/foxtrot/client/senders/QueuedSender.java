@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * An {@link com.flipkart.foxtrot.client.EventSender} that uses a persistent queue to save and forward messages.
- * During send, a push to the queue is done. A separate thread batches and forwards the messages to hyperion.
+ * During send, a push to the queue is done. A separate thread batches and forwards the messages to foxtrot.
  * If push fails, it will keep on retrying. check the constructors for different options. This sender allows for setting a
  * lower-level sender like {@link com.flipkart.foxtrot.client.senders.HttpSyncEventSender} to send the events to the API.
  * If no sender is set, it creates an {@link com.flipkart.foxtrot.client.senders.HttpSyncEventSender} to send messages.
@@ -131,7 +131,7 @@ public class QueuedSender extends EventSender {
         public void run() {
             try {
                 while(!messageQueue.isEmpty()) {
-                    logger.info("There are messages in the hyperion message queue. Sender invoked.");
+                    logger.info("There are messages in the foxtrot message queue. Sender invoked.");
                     List<Document> entries = Lists.newArrayListWithExpectedSize(batchSize);
                     int sizeOfPayload=0;
                     for(int i = 0; i < batchSize; i++) {
@@ -160,21 +160,21 @@ public class QueuedSender extends EventSender {
                             retryCount++;
                             try {
                                 eventSender.send(entries);
-                                logger.info(String.format("Sent %d events to hyperion.", entries.size()));
+                                logger.info(String.format("Sent %d events to foxtrot.", entries.size()));
                                 break;
                             } catch (Throwable t) {
                                 logger.error("Could not send events: ", t);
                             }
                         } while (retryCount <= RETRIES);
                         if(retryCount > RETRIES) {
-                            logger.error("Could not send event. Probably hyperion api is down. Re-queuing the messages." +
+                            logger.error("Could not send event. Probably foxtrot api is down. Re-queuing the messages." +
                                     " Order will be screwed up. But will appear proper on graph once ingested.");
                             sender.send(entries);
                             break;
                         }
                     }
                     else {
-                        logger.info("Nothing to send to hyperion");
+                        logger.info("Nothing to send to foxtrot");
                     }
                 }
             } catch (Exception e) {
@@ -198,7 +198,7 @@ public class QueuedSender extends EventSender {
                 logger.info(String.format("Ran GC on queue. Took: %d milliseconds",
                         (System.currentTimeMillis() - startTime)));
             } catch (IOException e) {
-                logger.error("Could not perform GC on hyperion message queue: ", e);
+                logger.error("Could not perform GC on foxtrot message queue: ", e);
             }
         }
     }
