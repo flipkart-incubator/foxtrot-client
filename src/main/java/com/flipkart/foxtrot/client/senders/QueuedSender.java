@@ -117,7 +117,6 @@ public class QueuedSender extends EventSender {
         private IBigQueue messageQueue;
         private final EventSerializationHandler serializationHandler;
         private int batchSize;
-        private int sizeOfPayload;
 
         public MessageSenderThread(QueuedSender queuedSender, EventSender eventSender, IBigQueue messageQueue,
                                    EventSerializationHandler serializationHandler, int batchSize) throws Exception {
@@ -126,7 +125,6 @@ public class QueuedSender extends EventSender {
             this.messageQueue = messageQueue;
             this.serializationHandler = serializationHandler;
             this.batchSize = batchSize;
-            this.sizeOfPayload=0;
         }
 
         @Override
@@ -135,18 +133,19 @@ public class QueuedSender extends EventSender {
                 while(!messageQueue.isEmpty()) {
                     logger.info("There are messages in the hyperion message queue. Sender invoked.");
                     List<Document> entries = Lists.newArrayListWithExpectedSize(batchSize);
+                    int sizeOfPayload=0;
                     for(int i = 0; i < batchSize; i++) {
                         byte data[] = messageQueue.dequeue();
                         if(null == data) {
                             break;
                         }
                         //check added to keep avoid payload size greater than 2MB from being pushed in one batch calls
-                        this.sizeOfPayload += data.length+24+8;
+                        sizeOfPayload += data.length+24+8;
                         if(sizeOfPayload > MAX_PAYLOAD_SIZE){
-                            if(data.length +24+8 > MAX_PAYLOAD_SIZE){
-                                logger.error(String.format("Dropping packet as size > 2MB  packet : %s",new String(data)));
-                                break;
-                            }else{
+                            if(data.length +24+8 > MAX_PAYLOAD_SIZE) { //A single message > 2MB..
+                                logger.error(String.format("Dropping message as size > 2MB  packet : %s",new String(data)));
+                                continue; //Move to next message
+                            } else {
                                 logger.info(String.format("data size %d > 2MB threshold, hence truncating batch size for this and enqueing the last overriding data to pass on in next batch.",sizeOfPayload));
                                 messageQueue.enqueue(data);
                                 break;
