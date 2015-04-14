@@ -3,6 +3,7 @@ package com.flipkart.foxtrot.client.senders;
 import com.flipkart.foxtrot.client.Document;
 import com.flipkart.foxtrot.client.EventSender;
 import com.flipkart.foxtrot.client.EventSerializationHandler;
+import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
 import com.google.common.collect.Lists;
@@ -33,34 +34,12 @@ import java.util.concurrent.TimeUnit;
 public class QueuedSender extends EventSender {
     private static final Logger logger = LoggerFactory.getLogger(QueuedSender.class.getSimpleName());
     private static final int RETRIES = 5;
-    private static final int DEFAULT_BATCH_SIZE = 200;
     private static final int MAX_PAYLOAD_SIZE = 2000000; //2MB
-    private static final String DEFAULT_PATH = "/tmp/foxtrot-messages";
     private final EventSender eventSender;
 
     private IBigQueue messageQueue;
     private final ScheduledExecutorService scheduler;
 
-
-    public QueuedSender(final String appName, FoxtrotCluster cluster) throws Exception {
-        this(appName, cluster, DEFAULT_PATH);
-    }
-
-    public QueuedSender(final String appName, FoxtrotCluster cluster, final String path) throws Exception {
-        this(appName, cluster, path, DEFAULT_BATCH_SIZE);
-    }
-
-    public QueuedSender(final String appName, FoxtrotCluster cluster, final String path, int batchSize) throws Exception {
-        this(new HttpSyncEventSender(appName, cluster), path, batchSize);
-    }
-
-    public QueuedSender(EventSender eventSender, final String path) throws Exception {
-        this(eventSender, path, DEFAULT_BATCH_SIZE);
-    }
-
-    public QueuedSender(EventSender eventSender, final String path, int batchSize) throws Exception {
-        this(eventSender, JacksonJsonSerializationHandler.INSTANCE, path, batchSize, 1);
-    }
 
     /**
      * Instantiates a new Queued sender.

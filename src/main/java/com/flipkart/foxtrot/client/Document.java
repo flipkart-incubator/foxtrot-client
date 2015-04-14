@@ -2,6 +2,8 @@ package com.flipkart.foxtrot.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.flipkart.foxtrot.client.util.TypeChecker;
+import com.google.common.base.Preconditions;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;
@@ -17,7 +19,7 @@ public class Document {
 
     @NotNull
     @JsonProperty
-    private JsonNode data;
+    private Object data;
 
     public Document() {
         this.timestamp = System.currentTimeMillis();
@@ -37,7 +39,7 @@ public class Document {
         this.id = id;
     }
 
-    public JsonNode getData() {
+    public Object getData() {
         return data;
     }
 

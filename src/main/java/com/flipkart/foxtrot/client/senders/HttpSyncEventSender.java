@@ -3,6 +3,7 @@ package com.flipkart.foxtrot.client.senders;
 import com.flipkart.foxtrot.client.Document;
 import com.flipkart.foxtrot.client.EventSender;
 import com.flipkart.foxtrot.client.EventSerializationHandler;
+import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
@@ -31,21 +32,17 @@ import java.util.List;
 public class HttpSyncEventSender extends EventSender {
     private static final Logger logger = LoggerFactory.getLogger(HttpSyncEventSender.class.getSimpleName());
 
-    private final String appName;
+    private final String table;
     private final FoxtrotCluster client;
     private CloseableHttpClient httpClient;
 
-    public HttpSyncEventSender(String appName, FoxtrotCluster client) {
-        this(appName, client, JacksonJsonSerializationHandler.INSTANCE);
-    }
-
-    public HttpSyncEventSender(String appName, FoxtrotCluster client, EventSerializationHandler serializationHandler) {
+    public HttpSyncEventSender(FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler) {
         super(serializationHandler);
-        this.appName = appName;
+        this.table = config.getTable();
         this.client = client;
         PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        cm.setMaxTotal(1024); //Probablt max number of foxtrot hosts
-        cm.setDefaultMaxPerRoute(1); //USeless to set more per route as only one thread is sending data
+        cm.setMaxTotal(1024); //Probably max number of foxtrot hosts
+        cm.setDefaultMaxPerRoute(1); //Useless to set more per route as only one thread is sending data
         this.httpClient = HttpClients.custom().setConnectionManager(cm).build();
     }
 
@@ -70,7 +67,7 @@ public class HttpSyncEventSender extends EventSender {
     }
 
     public void send(byte[] payload) {
-        FoxtrotClusterMember clusterMember = client.cluster();
+        FoxtrotClusterMember clusterMember = client.member();
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
         CloseableHttpResponse response = null;
         try {
@@ -78,7 +75,7 @@ public class HttpSyncEventSender extends EventSender {
                     .setScheme("http")
                     .setHost(clusterMember.getHost())
                     .setPort(clusterMember.getPort())
-                    .setPath(String.format("/foxtrot/v1/document/%s/bulk", appName))
+                    .setPath(String.format("/foxtrot/v1/document/%s/bulk", table))
                     .build();
             HttpPost post = new HttpPost(requestURI);
             post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());

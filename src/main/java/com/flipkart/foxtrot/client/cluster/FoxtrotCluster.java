@@ -1,9 +1,7 @@
 package com.flipkart.foxtrot.client.cluster;
 
 import com.flipkart.foxtrot.client.*;
-import com.flipkart.foxtrot.client.selectors.RandomSelector;
 import com.flipkart.foxtrot.client.serialization.FoxtrotClusterResponseSerializationHandler;
-import com.flipkart.foxtrot.client.serialization.JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,24 +19,18 @@ public class FoxtrotCluster {
     private ScheduledExecutorService executorService;
     private AtomicReference<FoxtrotClusterStatus> status = new AtomicReference<>();
 
-    public FoxtrotCluster(FoxtrotClientConfig config) throws Exception {
-        this(config, new RandomSelector());
-    }
-
-    public FoxtrotCluster(FoxtrotClientConfig config, MemberSelector selector) throws Exception {
-        this(config, selector, JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl.INSTANCE);
-    }
-
     public FoxtrotCluster(FoxtrotClientConfig config,
                    MemberSelector selector,
                    FoxtrotClusterResponseSerializationHandler serializationHandler) throws Exception {
         this.selector = selector;
         executorService = Executors.newScheduledThreadPool(1);
         ClusterStatusUpdater updater = ClusterStatusUpdater.create(config, status, serializationHandler);
-        future = executorService.scheduleWithFixedDelay(updater, 0, config.getRefreshInterval(), TimeUnit.SECONDS);
+        updater.loadClusterData();
+        future = executorService.scheduleWithFixedDelay(updater, config.getRefreshIntervalSecs(),
+                                                                config.getRefreshIntervalSecs(), TimeUnit.SECONDS);
     }
 
-    public FoxtrotClusterMember cluster() {
+    public FoxtrotClusterMember member() {
         if(null == status) {
             return null;
         }

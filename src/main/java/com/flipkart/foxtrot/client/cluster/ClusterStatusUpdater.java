@@ -57,9 +57,13 @@ public class ClusterStatusUpdater implements Runnable {
 
     @Override
     public void run() {
+        loadClusterData();
+    }
+
+    public void loadClusterData() {
         CloseableHttpResponse response = null;
         try {
-            logger.debug("Initiating data get");
+            logger.trace("Initiating data get");
             HttpGet httpGet = new HttpGet(uri);
             response = httpClient.execute(httpGet);
             if(response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
