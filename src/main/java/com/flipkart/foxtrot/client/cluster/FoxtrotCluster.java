@@ -1,6 +1,7 @@
 package com.flipkart.foxtrot.client.cluster;
 
-import com.flipkart.foxtrot.client.*;
+import com.flipkart.foxtrot.client.FoxtrotClientConfig;
+import com.flipkart.foxtrot.client.MemberSelector;
 import com.flipkart.foxtrot.client.serialization.FoxtrotClusterResponseSerializationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

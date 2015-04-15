@@ -14,6 +14,10 @@ public class FoxtrotClusterStatus {
     public FoxtrotClusterStatus() {
     }
 
+    public FoxtrotClusterStatus(List<FoxtrotClusterMember> members) {
+        this.members = members;
+    }
+
     public List<FoxtrotClusterMember> getMembers() {
         return members;
     }

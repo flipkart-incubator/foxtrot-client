@@ -10,6 +10,11 @@ public class FoxtrotClusterMember {
     public FoxtrotClusterMember() {
     }
 
+    public FoxtrotClusterMember(String host, int port) {
+        this.host = host;
+        this.port = port;
+    }
+
 
     public String getHost() {
         return host;

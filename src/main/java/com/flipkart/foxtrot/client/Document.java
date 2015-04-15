@@ -2,8 +2,6 @@ package com.flipkart.foxtrot.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.flipkart.foxtrot.client.util.TypeChecker;
-import com.google.common.base.Preconditions;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.NotNull;

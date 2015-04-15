@@ -6,7 +6,6 @@ import com.flipkart.foxtrot.client.EventSerializationHandler;
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
-import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
 import com.google.common.net.MediaType;
