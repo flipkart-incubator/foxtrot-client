@@ -83,9 +83,9 @@ public class HttpSyncEventSender extends EventSender {
             if(response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
                 throw new RuntimeException("Could not send event: " + EntityUtils.toString(response.getEntity()));
             }
-            logger.debug("Sent event to {}:{}", clusterMember.getHost(), clusterMember.getPort());
+            logger.debug("Published event to {}:{}", clusterMember.getHost(), clusterMember.getPort());
         } catch (URISyntaxException | IOException e) {
-            e.printStackTrace();
+            logger.error("Unable to publish event to foxtrot", e);
         } finally {
             if(null != response) {
                 try {

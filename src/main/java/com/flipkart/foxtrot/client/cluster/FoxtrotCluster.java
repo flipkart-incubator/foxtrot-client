@@ -45,7 +45,12 @@ public class FoxtrotCluster {
     public void stop() {
         logger.debug("Shutting down cluster status checker");
         future.cancel(true);
-        while (!future.isDone() || !future.isDone()) {
+        while (!future.isDone()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                logger.error("Interrupted", e);
+            }
             logger.debug("Waiting for checker to stop");
         }
         executorService.shutdown();
@@ -53,7 +58,7 @@ public class FoxtrotCluster {
         try {
             executorService.awaitTermination(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("executor_service_termination_exception", e);
         }
 
         executorService.shutdownNow();

@@ -115,7 +115,7 @@ public class QueuedSender extends EventSender {
                         if(null == data) {
                             break;
                         }
-                        //check added to keep avoid payload size greater than 2MB from being pushed in one batch calls
+                        // Check added to keep avoid payload size greater than 2MB from being pushed in one batch calls
                         sizeOfPayload += data.length+24+8;
                         if(sizeOfPayload > MAX_PAYLOAD_SIZE){
                             if(data.length +24+8 > MAX_PAYLOAD_SIZE) { //A single message > 2MB..
@@ -130,7 +130,6 @@ public class QueuedSender extends EventSender {
                         entries.add(serializationHandler.deserialize(data));
                     }
                     if (!entries.isEmpty()) {
-                        //System.out.println(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(entries));
                         int retryCount = 0;
                         do {
                             retryCount++;
