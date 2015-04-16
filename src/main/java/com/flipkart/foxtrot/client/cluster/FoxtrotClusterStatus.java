@@ -1,4 +1,4 @@
-package com.flipkart.foxtrot.client;
+package com.flipkart.foxtrot.client.cluster;
 
 import com.google.common.collect.ImmutableList;
 
@@ -12,6 +12,10 @@ public class FoxtrotClusterStatus {
     }
 
     public FoxtrotClusterStatus() {
+    }
+
+    public FoxtrotClusterStatus(List<FoxtrotClusterMember> members) {
+        this.members = members;
     }
 
     public List<FoxtrotClusterMember> getMembers() {

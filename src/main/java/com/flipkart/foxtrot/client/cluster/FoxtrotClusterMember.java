@@ -1,4 +1,4 @@
-package com.flipkart.foxtrot.client;
+package com.flipkart.foxtrot.client.cluster;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -8,6 +8,11 @@ public class FoxtrotClusterMember {
     private int port;
 
     public FoxtrotClusterMember() {
+    }
+
+    public FoxtrotClusterMember(String host, int port) {
+        this.host = host;
+        this.port = port;
     }
 
 

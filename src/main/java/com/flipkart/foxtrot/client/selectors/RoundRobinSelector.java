@@ -1,7 +1,7 @@
 package com.flipkart.foxtrot.client.selectors;
 
-import com.flipkart.foxtrot.client.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.MemberSelector;
+import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
