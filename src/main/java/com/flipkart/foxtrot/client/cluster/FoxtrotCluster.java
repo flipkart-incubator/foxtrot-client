@@ -1,7 +1,7 @@
 package com.flipkart.foxtrot.client.cluster;
 
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
-import com.flipkart.foxtrot.client.MemberSelector;
+import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.serialization.FoxtrotClusterResponseSerializationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,25 +21,21 @@ public class FoxtrotCluster {
     private AtomicReference<FoxtrotClusterStatus> status = new AtomicReference<>();
 
     public FoxtrotCluster(FoxtrotClientConfig config,
-                   MemberSelector selector,
-                   FoxtrotClusterResponseSerializationHandler serializationHandler) throws Exception {
+                          MemberSelector selector,
+                          FoxtrotClusterResponseSerializationHandler serializationHandler) throws Exception {
         this.selector = selector;
         executorService = Executors.newScheduledThreadPool(1);
         ClusterStatusUpdater updater = ClusterStatusUpdater.create(config, status, serializationHandler);
         updater.loadClusterData();
         future = executorService.scheduleWithFixedDelay(updater, config.getRefreshIntervalSecs(),
-                                                                config.getRefreshIntervalSecs(), TimeUnit.SECONDS);
+                config.getRefreshIntervalSecs(), TimeUnit.SECONDS);
     }
 
     public FoxtrotClusterMember member() {
-        if(null == status) {
+        if (null == status || status.get() == null || status.get().getMembers().isEmpty()) {
             return null;
         }
-        FoxtrotClusterStatus foxtrotClusterStatus = status.get();
-        if(null == foxtrotClusterStatus || foxtrotClusterStatus.getMembers().isEmpty()) {
-            return null;
-        }
-        return selector.selectMember(foxtrotClusterStatus.getMembers());
+        return selector.selectMember(status.get().getMembers());
     }
 
     public void stop() {

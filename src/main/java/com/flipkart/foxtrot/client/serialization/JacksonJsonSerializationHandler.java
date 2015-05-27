@@ -3,16 +3,14 @@ package com.flipkart.foxtrot.client.serialization;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.foxtrot.client.Document;
-import com.flipkart.foxtrot.client.EventSerializationHandler;
 
 import java.io.IOException;
 import java.util.List;
 
 public class JacksonJsonSerializationHandler implements EventSerializationHandler {
 
-    private final ObjectMapper mapper;
-
     public static final JacksonJsonSerializationHandler INSTANCE = new JacksonJsonSerializationHandler();
+    private final ObjectMapper mapper;
 
     private JacksonJsonSerializationHandler() {
         this.mapper = new ObjectMapper();
@@ -39,11 +37,11 @@ public class JacksonJsonSerializationHandler implements EventSerializationHandle
     }
 
     @Override
-    public Document deserialize(byte[] data) throws DeserializatiionException {
+    public Document deserialize(byte[] data) throws DeserializationException {
         try {
             return mapper.readValue(data, Document.class);
         } catch (IOException e) {
-            throw new DeserializatiionException("Error deserializing document: " + e.getLocalizedMessage(), e);
+            throw new DeserializationException("Error deserializing document: " + e.getLocalizedMessage(), e);
         }
     }
 }

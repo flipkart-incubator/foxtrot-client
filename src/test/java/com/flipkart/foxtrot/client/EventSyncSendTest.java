@@ -16,13 +16,13 @@
 
 package com.flipkart.foxtrot.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.handlers.DummyDocRequestHandler;
 import com.flipkart.foxtrot.client.handlers.DummyEventHandler;
+import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
@@ -30,15 +30,11 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
 
 public class EventSyncSendTest {
-    private static final Logger logger = LoggerFactory.getLogger(EventSyncSendTest.class.getSimpleName());
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     private DummyEventHandler eventHandler = new DummyEventHandler();
     private TestHostPort testHostPort = new TestHostPort();

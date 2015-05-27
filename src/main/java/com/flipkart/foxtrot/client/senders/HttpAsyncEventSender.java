@@ -2,10 +2,10 @@ package com.flipkart.foxtrot.client.senders;
 
 import com.flipkart.foxtrot.client.Document;
 import com.flipkart.foxtrot.client.EventSender;
-import com.flipkart.foxtrot.client.EventSerializationHandler;
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
+import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
 import com.google.common.net.MediaType;
@@ -50,7 +50,7 @@ public class HttpAsyncEventSender extends EventSender {
         this.client = client;
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
         PoolingNHttpClientConnectionManager cm = new PoolingNHttpClientConnectionManager(ioReactor);
-        cm.setMaxTotal(100); //Probably max number of foxtrot hosts
+        cm.setMaxTotal(1024); //Probably max number of foxtrot hosts
         this.httpClient = HttpAsyncClients.custom().setConnectionManager(cm).build();
         Evictor connEvictor = new Evictor(cm);
         executorService = Executors.newScheduledThreadPool(1);

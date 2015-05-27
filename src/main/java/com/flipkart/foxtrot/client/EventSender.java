@@ -1,5 +1,7 @@
 package com.flipkart.foxtrot.client;
 
+import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
+
 import java.util.List;
 
 public abstract class EventSender {
