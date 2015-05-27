@@ -47,7 +47,7 @@ public class EventAsyncSendTest {
                                         "/foxtrot/v1/document/test/bulk", eventHandler));
 
     @Test
-    public void testQueuedSend() throws Exception {
+    public void testAsyncSend() throws Exception {
 
         FoxtrotClientConfig clientConfig = new FoxtrotClientConfig();
         clientConfig.setHost(testHostPort.getHostName());

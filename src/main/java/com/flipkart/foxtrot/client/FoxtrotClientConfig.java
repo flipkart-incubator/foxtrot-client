@@ -30,16 +30,25 @@ public class FoxtrotClientConfig {
     private int refreshIntervalSecs = 1;
 
     /**
-     * If {@link com.flipkart.foxtrot.client.senders.QueuedSender} is used, the number of messages to push per batch.
+     * Type of client which will init. Can be any of {@link com.flipkart.foxtrot.client.ClientType}
+     * Default value is {@link com.flipkart.foxtrot.client.ClientType#async}
+     */
+    private ClientType clientType = ClientType.async;
+
+    /**
+     * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued_sync}
+     * or {@link com.flipkart.foxtrot.client.ClientType#queued_async}
+     * Temporary file system path where events will be saved before ingestion.
+     */
+    private String queuePath;
+
+    /**
+     * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued_sync}
+     * or {@link com.flipkart.foxtrot.client.ClientType#queued_async}
+     * Number of messages to push per batch.
      * (Default: 200)
      */
     private int batchSize = 200;
-
-    /**
-     * The file system path where the {@link com.flipkart.foxtrot.client.senders.QueuedSender} will save the events.
-     * NOTE: If this is not provided an instance of {@link com.flipkart.foxtrot.client.senders.HttpAsyncEventSender} is used.
-     */
-    private String localQueuePath;
 
     public FoxtrotClientConfig() {
     }
@@ -48,8 +57,8 @@ public class FoxtrotClientConfig {
         return table;
     }
 
-    public void setTable(String appName) {
-        this.table = appName;
+    public void setTable(String table) {
+        this.table = table;
     }
 
     public String getHost() {
@@ -84,12 +93,12 @@ public class FoxtrotClientConfig {
         this.refreshIntervalSecs = refreshIntervalSecs;
     }
 
-    public String getLocalQueuePath() {
-        return localQueuePath;
+    public ClientType getClientType() {
+        return clientType;
     }
 
-    public void setLocalQueuePath(String localQueuePath) {
-        this.localQueuePath = localQueuePath;
+    public void setClientType(ClientType clientType) {
+        this.clientType = clientType;
     }
 
     public int getBatchSize() {
@@ -98,5 +107,13 @@ public class FoxtrotClientConfig {
 
     public void setBatchSize(int batchSize) {
         this.batchSize = batchSize;
+    }
+
+    public String getQueuePath() {
+        return queuePath;
+    }
+
+    public void setQueuePath(String queuePath) {
+        this.queuePath = queuePath;
     }
 }
