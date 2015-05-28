@@ -36,15 +36,15 @@ public class FoxtrotClientConfig {
     private ClientType clientType = ClientType.async;
 
     /**
-     * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued_sync}
-     * or {@link com.flipkart.foxtrot.client.ClientType#queued_async}
+     * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued}
+     * or {@link com.flipkart.foxtrot.client.ClientType#queued}
      * Temporary file system path where events will be saved before ingestion.
      */
     private String queuePath;
 
     /**
-     * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued_sync}
-     * or {@link com.flipkart.foxtrot.client.ClientType#queued_async}
+     * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued}
+     * or {@link com.flipkart.foxtrot.client.ClientType#queued}
      * Number of messages to push per batch.
      * (Default: 200)
      */

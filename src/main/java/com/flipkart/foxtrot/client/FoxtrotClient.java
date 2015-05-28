@@ -37,7 +37,7 @@ public class FoxtrotClient {
             case async:
                 this.eventSender = new HttpAsyncEventSender(config, foxtrotCluster, serializationHandler);
                 break;
-            case queued_sync:
+            case queued:
                 List<String> messages = new ArrayList<>();
                 if (StringUtils.isEmpty(config.getQueuePath())) {
                     messages.add("Empty Local Queue Path");
@@ -49,13 +49,6 @@ public class FoxtrotClient {
                     throw new Exception(messages.toString());
                 }
                 this.eventSender = new QueuedSender(new HttpSyncEventSender(config, foxtrotCluster, serializationHandler),
-                        serializationHandler,
-                        config.getQueuePath(),
-                        config.getBatchSize()
-                );
-                break;
-            case queued_async:
-                this.eventSender = new QueuedSender(new HttpAsyncEventSender(config, foxtrotCluster, serializationHandler),
                         serializationHandler,
                         config.getQueuePath(),
                         config.getBatchSize()

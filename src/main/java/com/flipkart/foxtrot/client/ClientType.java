@@ -6,6 +6,5 @@ package com.flipkart.foxtrot.client;
 public enum ClientType {
     sync,
     async,
-    queued_sync,
-    queued_async
+    queued
 }
