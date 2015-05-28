@@ -2,4 +2,4 @@
 *.ipr
 .idea
 mdeploy*
-
+target/**

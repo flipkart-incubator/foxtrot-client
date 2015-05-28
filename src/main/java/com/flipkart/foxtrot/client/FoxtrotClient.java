@@ -1,10 +1,12 @@
 package com.flipkart.foxtrot.client;
 
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
+import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.selectors.RandomSelector;
 import com.flipkart.foxtrot.client.senders.HttpAsyncEventSender;
 import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
 import com.flipkart.foxtrot.client.senders.QueuedSender;
+import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
 import com.flipkart.foxtrot.client.util.TypeChecker;

@@ -1,4 +1,4 @@
-package com.flipkart.foxtrot.client;
+package com.flipkart.foxtrot.client.selectors;
 
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 

@@ -16,28 +16,25 @@
 
 package com.flipkart.foxtrot.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.handlers.DummyDocRequestHandler;
 import com.flipkart.foxtrot.client.handlers.DummyEventHandler;
+import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class EventQueuedSendTest {
-    private static final Logger logger = LoggerFactory.getLogger(EventQueuedSendTest.class.getSimpleName());
-    private static final ObjectMapper mapper = new ObjectMapper();
 
     private DummyEventHandler eventHandler = new DummyEventHandler();
     private TestHostPort testHostPort = new TestHostPort();
@@ -68,7 +65,7 @@ public class EventQueuedSendTest {
             }
         }, JacksonJsonSerializationHandler.INSTANCE);
         JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
-        for(int i = 0; i <200; i++) {
+        for (int i = 0; i < 200; i++) {
             try {
                 client.send(
                         new Document(
@@ -81,6 +78,45 @@ public class EventQueuedSendTest {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+        Thread.sleep(10000);
+        Assert.assertEquals(200, eventHandler.getCounter().get());
+        client.close();
+    }
+
+    @Test
+    public void testQueuedSendBulk() throws Exception {
+        Path tmpPath = Files.createTempDirectory("tmp");
+        tmpPath.toFile().deleteOnExit();
+        final String path = tmpPath.toString();
+
+
+        FoxtrotClientConfig clientConfig = new FoxtrotClientConfig();
+        clientConfig.setHost(testHostPort.getHostName());
+        clientConfig.setPort(testHostPort.getPort());
+        clientConfig.setTable("test");
+        clientConfig.setLocalQueuePath(path);
+        clientConfig.setBatchSize(50);
+
+        FoxtrotClient client = new FoxtrotClient(clientConfig, new MemberSelector() {
+            @Override
+            public FoxtrotClusterMember selectMember(List<FoxtrotClusterMember> members) {
+                return new FoxtrotClusterMember(testHostPort.getHostName(), testHostPort.getPort());
+            }
+        }, JacksonJsonSerializationHandler.INSTANCE);
+        JsonNodeFactory nodeFactory = new JsonNodeFactory(false);
+        List<Document> documents = new ArrayList<>();
+        for (int i = 0; i < 200; i++) {
+            documents.add(new Document(UUID.randomUUID().toString(),
+                            System.currentTimeMillis(),
+                            new ObjectNode(nodeFactory).put("testField", "Rishabh Goyal")
+                    )
+            );
+        }
+        try {
+            client.send(documents);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         Thread.sleep(10000);
         Assert.assertEquals(200, eventHandler.getCounter().get());

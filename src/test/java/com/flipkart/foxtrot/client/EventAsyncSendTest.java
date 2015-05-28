@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.handlers.DummyDocRequestHandler;
 import com.flipkart.foxtrot.client.handlers.DummyEventHandler;
+import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
 import com.google.common.collect.ImmutableMap;
 import org.junit.Assert;
