@@ -55,7 +55,7 @@ public class EventQueuedSendTest {
         clientConfig.setHost(testHostPort.getHostName());
         clientConfig.setPort(testHostPort.getPort());
         clientConfig.setTable("test");
-        clientConfig.setLocalQueuePath(path);
+        clientConfig.setQueuePath(path);
         clientConfig.setBatchSize(50);
 
         FoxtrotClient client = new FoxtrotClient(clientConfig, new MemberSelector() {
@@ -95,7 +95,7 @@ public class EventQueuedSendTest {
         clientConfig.setHost(testHostPort.getHostName());
         clientConfig.setPort(testHostPort.getPort());
         clientConfig.setTable("test");
-        clientConfig.setLocalQueuePath(path);
+        clientConfig.setQueuePath(path);
         clientConfig.setBatchSize(50);
 
         FoxtrotClient client = new FoxtrotClient(clientConfig, new MemberSelector() {

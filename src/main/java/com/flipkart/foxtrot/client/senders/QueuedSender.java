@@ -42,17 +42,15 @@ public class QueuedSender extends EventSender {
     /**
      * Instantiates a new Queued sender.
      *
-     * @param eventSender              Set a sender like {@link com.flipkart.foxtrot.client.senders.HttpSyncEventSender}.
-     * @param path                     The path to the queue file.
-     * @param batchSize                The size of the batch to be sent per API call.
-     * @param numSecondsBetweenRefresh the num seconds between refresh
+     * @param eventSender Set a sender like {@link com.flipkart.foxtrot.client.senders.HttpSyncEventSender}.
+     * @param path        The path to the queue file.
+     * @param batchSize   The size of the batch to be sent per API call.
      * @throws Exception the exception
      */
     public QueuedSender(EventSender eventSender,
                         EventSerializationHandler serializationHandler,
                         final String path,
-                        int batchSize,
-                        int numSecondsBetweenRefresh) throws Exception {
+                        int batchSize) throws Exception {
         super(serializationHandler);
         this.eventSender = eventSender;
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwxrwx");
@@ -61,9 +59,8 @@ public class QueuedSender extends EventSender {
         this.messageQueue = new BigQueueImpl(path, "foxtrot-messages");
         this.messageSenderThread = new MessageSenderThread(this, eventSender, messageQueue, getSerializationHandler(), batchSize);
         this.scheduler = Executors.newScheduledThreadPool(2);
-        scheduler.scheduleWithFixedDelay(messageSenderThread, 0,
-                numSecondsBetweenRefresh, TimeUnit.SECONDS);
-        scheduler.scheduleAtFixedRate(new QueueCleaner(messageQueue), 0, 15, TimeUnit.SECONDS);
+        scheduler.scheduleWithFixedDelay(messageSenderThread, 0, 1, TimeUnit.SECONDS);
+        scheduler.scheduleWithFixedDelay(new QueueCleaner(messageQueue), 0, 15, TimeUnit.SECONDS);
     }
 
     @Override
