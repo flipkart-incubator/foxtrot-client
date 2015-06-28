@@ -16,6 +16,7 @@ public class FoxtrotCluster {
     private static final Logger logger = LoggerFactory.getLogger(FoxtrotCluster.class.getSimpleName());
 
     private final MemberSelector selector;
+    private FoxtrotClientConfig clientConfig;
     private final ScheduledFuture<?> future;
     private ScheduledExecutorService executorService;
     private AtomicReference<FoxtrotClusterStatus> status = new AtomicReference<>();
@@ -24,6 +25,7 @@ public class FoxtrotCluster {
                           MemberSelector selector,
                           FoxtrotClusterResponseSerializationHandler serializationHandler) throws Exception {
         this.selector = selector;
+        this.clientConfig = config;
         executorService = Executors.newScheduledThreadPool(1);
         ClusterStatusUpdater updater = ClusterStatusUpdater.create(config, status, serializationHandler);
         updater.loadClusterData();
@@ -39,25 +41,24 @@ public class FoxtrotCluster {
     }
 
     public void stop() {
-        logger.debug("Shutting down cluster status checker");
+        logger.info("table={} shutting_down_cluster_status_checker", new Object[]{clientConfig.getTable()});
         future.cancel(true);
         while (!future.isDone()) {
             try {
                 Thread.sleep(100);
             } catch (InterruptedException e) {
-                logger.error("Interrupted", e);
+                logger.error("table={} interrupted", new Object[]{clientConfig.getTable()}, e);
             }
-            logger.debug("Waiting for checker to stop");
+            logger.info("table={} waiting_for_checker_to_stop", new Object[]{clientConfig.getTable()});
         }
         executorService.shutdown();
         //Wait for the running tasks
         try {
             executorService.awaitTermination(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            logger.error("executor_service_termination_exception", e);
+            logger.error("table={} executor_service_termination_exception", new Object[]{clientConfig.getTable()}, e);
         }
-
         executorService.shutdownNow();
-        logger.debug("Shut down cluster status checker");
+        logger.info("table={} cluster_status_checker_shutdown_complete", new Object[]{clientConfig.getTable()});
     }
 }

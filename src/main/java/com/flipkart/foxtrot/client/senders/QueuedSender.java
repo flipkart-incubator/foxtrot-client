@@ -9,7 +9,6 @@ import com.leansoft.bigqueue.IBigQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -34,6 +33,7 @@ public class QueuedSender extends EventSender {
     private static final int RETRIES = 5;
     private static final int MAX_PAYLOAD_SIZE = 2000000; //2MB
     private final EventSender eventSender;
+    private final String path;
     private final MessageSenderThread messageSenderThread;
     private final ScheduledExecutorService scheduler;
     private IBigQueue messageQueue;
@@ -53,14 +53,15 @@ public class QueuedSender extends EventSender {
                         int batchSize) throws Exception {
         super(serializationHandler);
         this.eventSender = eventSender;
+        this.path = path;
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwxrwx");
         FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
         Files.createDirectories(Paths.get(path), attr);
         this.messageQueue = new BigQueueImpl(path, "foxtrot-messages");
-        this.messageSenderThread = new MessageSenderThread(this, eventSender, messageQueue, getSerializationHandler(), batchSize);
+        this.messageSenderThread = new MessageSenderThread(this, eventSender, messageQueue, path, getSerializationHandler(), batchSize);
         this.scheduler = Executors.newScheduledThreadPool(2);
         scheduler.scheduleWithFixedDelay(messageSenderThread, 0, 1, TimeUnit.SECONDS);
-        scheduler.scheduleWithFixedDelay(new QueueCleaner(messageQueue), 0, 15, TimeUnit.SECONDS);
+        scheduler.scheduleWithFixedDelay(new QueueCleaner(messageQueue, path), 0, 15, TimeUnit.SECONDS);
     }
 
     @Override
@@ -77,19 +78,20 @@ public class QueuedSender extends EventSender {
 
     @Override
     public void close() throws Exception {
+        logger.info("queue={} closing_queued_sender", new Object[]{path});
         while (!messageQueue.isEmpty()) {
-            Thread.sleep(1000);
-            logger.debug("Message queue is not empty .. waiting");
+            Thread.sleep(500);
+            logger.info("queue={} message_queue_not_empty waiting_for_queue_to_get_empty", new Object[]{path});
         }
 
         while (messageSenderThread.isRunning()) {
             Thread.sleep(500);
-            logger.debug("Message sender thread is still running.. waiting");
+            logger.info("queue={} message_sender_thread_still_running waiting_for_completion", new Object[]{path});
         }
         this.scheduler.shutdownNow();
-        logger.debug("Shut down sender thread");
+        logger.info("queue={} shutting_down_message_sender_thread", new Object[]{path});
         this.eventSender.close();
-        logger.debug("Shut down scheduled sender");
+        logger.info("queue={} shutdown_completed_for_message_sender_thread", new Object[]{path});
     }
 
     private static final class MessageSenderThread implements Runnable {
@@ -98,13 +100,19 @@ public class QueuedSender extends EventSender {
         private EventSender eventSender;
         private IBigQueue messageQueue;
         private int batchSize;
+        private String path;
         private AtomicBoolean running = new AtomicBoolean(false);
 
-        public MessageSenderThread(QueuedSender queuedSender, EventSender eventSender, IBigQueue messageQueue,
-                                   EventSerializationHandler serializationHandler, int batchSize) throws Exception {
+        public MessageSenderThread(QueuedSender queuedSender,
+                                   EventSender eventSender,
+                                   IBigQueue messageQueue,
+                                   String path,
+                                   EventSerializationHandler serializationHandler,
+                                   int batchSize) throws Exception {
             this.sender = queuedSender;
             this.eventSender = eventSender;
             this.messageQueue = messageQueue;
+            this.path = path;
             this.serializationHandler = serializationHandler;
             this.batchSize = batchSize;
         }
@@ -114,7 +122,7 @@ public class QueuedSender extends EventSender {
             running.set(true);
             try {
                 while (!messageQueue.isEmpty()) {
-                    logger.info("There are messages in the foxtrot message queue. Sender invoked.");
+                    logger.info("queue={} messages_found_in_message_queue sender_invoked", new Object[]{path});
                     List<Document> entries = Lists.newArrayListWithExpectedSize(batchSize);
                     int sizeOfPayload = 0;
                     for (int i = 0; i < batchSize; i++) {
@@ -126,10 +134,11 @@ public class QueuedSender extends EventSender {
                         sizeOfPayload += data.length + 24 + 8;
                         if (sizeOfPayload > MAX_PAYLOAD_SIZE) {
                             if (data.length + 24 + 8 > MAX_PAYLOAD_SIZE) { //A single message > 2MB..
-                                logger.error(String.format("Dropping message as size > 2MB  packet : %s", new String(data)));
+                                logger.error("queue={} message_size_limit_exceeded(2MB) message={}", new Object[]{path, new String(data)});
                                 continue; //Move to next message
                             } else {
-                                logger.info(String.format("data size %d > 2MB threshold, hence truncating batch size for this and enqueing the last overriding data to pass on in next batch.", sizeOfPayload));
+                                logger.info("queue={} batch_data_size_exceeds_threshold(2MB) size={} truncating_batch_size enqueuing_last_message_for_next_batch",
+                                        new Object[]{path, sizeOfPayload});
                                 messageQueue.enqueue(data);
                                 break;
                             }
@@ -142,24 +151,23 @@ public class QueuedSender extends EventSender {
                             retryCount++;
                             try {
                                 eventSender.send(entries);
-                                logger.info(String.format("Sent %d events to foxtrot.", entries.size()));
+                                logger.info("queue={} foxtrot_messages_sent count={}", new Object[]{path, entries.size()});
                                 break;
                             } catch (Throwable t) {
-                                logger.error("Could not send events: ", t);
+                                logger.error("queue={} message_send_failed count={}", new Object[]{path, entries.size()}, t);
                             }
                         } while (retryCount <= RETRIES);
                         if (retryCount > RETRIES) {
-                            logger.error("Could not send event. Probably foxtrot api is down. Re-queuing the messages." +
-                                    " Order will be screwed up. But will appear proper on graph once ingested.");
+                            logger.error("queue={} message_send_failed probably_api_down  re-queuing_messages", new Object[]{path});
                             sender.send(entries);
                             break;
                         }
                     } else {
-                        logger.info("Nothing to send to foxtrot");
+                        logger.info("queue={} nothing_to_send_to_foxtrot", new Object[]{path});
                     }
                 }
             } catch (Exception e) {
-                logger.error("Could not send message: ", e);
+                logger.error("queue={} message_send_failed", new Object[]{path}, e);
             }
             running.set(false);
         }
@@ -169,12 +177,13 @@ public class QueuedSender extends EventSender {
         }
     }
 
-
     private static final class QueueCleaner implements Runnable {
         private IBigQueue messageQueue;
+        private String path;
 
-        private QueueCleaner(IBigQueue messageQueue) {
+        private QueueCleaner(IBigQueue messageQueue, String path) {
             this.messageQueue = messageQueue;
+            this.path = path;
         }
 
         @Override
@@ -182,10 +191,9 @@ public class QueuedSender extends EventSender {
             try {
                 long startTime = System.currentTimeMillis();
                 this.messageQueue.gc();
-                logger.info(String.format("Ran GC on queue. Took: %d milliseconds",
-                        (System.currentTimeMillis() - startTime)));
-            } catch (IOException e) {
-                logger.error("Could not perform GC on foxtrot message queue: ", e);
+                logger.info("queue={} ran_gc_on_foxtrot_message_queue took={}", new Object[]{path, System.currentTimeMillis() - startTime});
+            } catch (Exception e) {
+                logger.error("queue={} gc_failed_on_foxtrot_message_queue", new Object[]{path}, e);
             }
         }
     }
