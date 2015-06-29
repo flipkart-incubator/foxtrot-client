@@ -29,7 +29,10 @@ public class FoxtrotClient {
                          EventSerializationHandler serializationHandler) throws Exception {
         this.foxtrotCluster = new FoxtrotCluster(config, memberSelector,
                 JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl.INSTANCE);
-
+        Preconditions.checkNotNull(config.getTable());
+        Preconditions.checkNotNull(config.getClientType());
+        Preconditions.checkNotNull(config.getHost());
+        Preconditions.checkArgument(config.getPort() >= 80);
         switch (config.getClientType()) {
             case sync:
                 this.eventSender = new HttpSyncEventSender(config, foxtrotCluster, serializationHandler);
@@ -40,10 +43,10 @@ public class FoxtrotClient {
             case queued:
                 List<String> messages = new ArrayList<>();
                 if (StringUtils.isEmpty(config.getQueuePath())) {
-                    messages.add("Empty Local Queue Path");
+                    messages.add(String.format("table=%s empty_local_queue_path", config.getTable()));
                 }
                 if (config.getBatchSize() <= 1) {
-                    messages.add("batchSize must be greater than 1 for queued sender");
+                    messages.add(String.format("table=%s invalid_batchSize must_be_greater_than_1", config.getTable()));
                 }
                 if (!messages.isEmpty()) {
                     throw new Exception(messages.toString());
@@ -56,7 +59,8 @@ public class FoxtrotClient {
                 break;
             default:
                 throw new Exception(
-                        String.format("Invalid client type : %s allowed_types : %s",
+                        String.format("table=%s invalid_client_type type_provided=%s allowed_types=%s",
+                                config.getTable(),
                                 config.getClientType(),
                                 StringUtils.join(ClientType.values(), ",")
                         )

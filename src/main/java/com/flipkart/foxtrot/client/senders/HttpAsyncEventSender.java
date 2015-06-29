@@ -52,7 +52,7 @@ public class HttpAsyncEventSender extends EventSender {
         PoolingNHttpClientConnectionManager cm = new PoolingNHttpClientConnectionManager(ioReactor);
         cm.setMaxTotal(1024); //Probably max number of foxtrot hosts
         this.httpClient = HttpAsyncClients.custom().setConnectionManager(cm).build();
-        Evictor connEvictor = new Evictor(cm);
+        Evictor connEvictor = new Evictor(table, cm);
         executorService = Executors.newScheduledThreadPool(1);
         executorService.scheduleWithFixedDelay(connEvictor, 1, 5, TimeUnit.SECONDS);
         httpClient.start();
@@ -74,10 +74,12 @@ public class HttpAsyncEventSender extends EventSender {
 
     @Override
     public void close() throws Exception {
+        logger.info("table={} shutting_down_executor_service", new Object[]{table});
         executorService.shutdownNow();
-        logger.debug("Shut down connection evictor");
+        logger.info("table={} executor_service_shutdown_completed", new Object[]{table});
+        logger.info("table={} closing_down_http_client", new Object[]{table});
         httpClient.close();
-        logger.debug("Closed HTTP Client");
+        logger.info("table={} closed_http_client", new Object[]{table});
     }
 
     public void send(byte[] payload) {
@@ -94,39 +96,40 @@ public class HttpAsyncEventSender extends EventSender {
             post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
             post.setEntity(new ByteArrayEntity(payload));
             httpClient.execute(post, new FutureCallback<HttpResponse>() {
-
                 public void completed(final HttpResponse response) {
                     if (response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
                         try {
-                            logger.error("Could not send event: {}", EntityUtils.toString(response.getEntity()));
+                            logger.error("table={} message_sending_failed api_response={}",
+                                    new Object[]{table, EntityUtils.toString(response.getEntity())});
                         } catch (IOException e) {
-                            logger.error("Could not deserialize API response.", e);
+                            logger.error("table={} api_response_deserialization_failed", new Object[]{table}, e);
                         }
                     }
                 }
 
                 public void failed(final Exception ex) {
-                    logger.error("Could not send event.", ex);
+                    logger.error("table={} message_sending_failed", new Object[]{table}, ex);
                 }
 
                 public void cancelled() {
-                    logger.error("Call to foxtrot cancelled.");
+                    logger.error("table={} call_to_foxtrot_cancelled", new Object[]{table});
                 }
 
             });
-            logger.debug("Sent event to {}:{}", clusterMember.getHost(), clusterMember.getPort());
+            logger.debug("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
         } catch (URISyntaxException e) {
-            logger.error("Invalid syntax: ", e);
+            logger.error("table={} invalid_uri_syntax", new Object[]{table}, e);
         }
 
     }
 
     private static class Evictor implements Runnable {
-
+        private String table;
         private final NHttpClientConnectionManager connectionManager;
 
-        public Evictor(NHttpClientConnectionManager connectionManager) {
+        public Evictor(String table, NHttpClientConnectionManager connectionManager) {
             super();
+            this.table = table;
             this.connectionManager = connectionManager;
         }
 
@@ -136,7 +139,7 @@ public class HttpAsyncEventSender extends EventSender {
                 connectionManager.closeExpiredConnections();
                 connectionManager.closeIdleConnections(5, TimeUnit.SECONDS);
             } catch (Exception ex) {
-                logger.error("Error cleaning up connections.", ex);
+                logger.error("table={} connection_cleanup_failed", new Object[]{table}, ex);
             }
         }
 

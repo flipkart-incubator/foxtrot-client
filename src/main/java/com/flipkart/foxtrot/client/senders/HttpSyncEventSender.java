@@ -61,8 +61,9 @@ public class HttpSyncEventSender extends EventSender {
 
     @Override
     public void close() throws Exception {
+        logger.info("table={} closing_http_client", new Object[]{table});
         httpClient.close();
-        logger.debug("Closed HTTP Client");
+        logger.info("table={} closed_http_client", new Object[]{table});
     }
 
     public void send(byte[] payload) {
@@ -80,18 +81,18 @@ public class HttpSyncEventSender extends EventSender {
             post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
             post.setEntity(new ByteArrayEntity(payload));
             response = httpClient.execute(post);
-            if(response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                throw new RuntimeException("Could not send event: " + EntityUtils.toString(response.getEntity()));
+            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
+                throw new RuntimeException(String.format("table=%s event_send_failed exception_message=%s", table, EntityUtils.toString(response.getEntity())));
             }
-            logger.debug("Published event to {}:{}", clusterMember.getHost(), clusterMember.getPort());
+            logger.debug("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
         } catch (URISyntaxException | IOException e) {
-            logger.error("Unable to publish event to foxtrot", e);
+            logger.error("table={} event_publish_failed", new Object[]{table}, e);
         } finally {
-            if(null != response) {
+            if (null != response) {
                 try {
                     response.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("table={} http_response_close_failed", new Object[]{table}, e);
                 }
             }
         }
