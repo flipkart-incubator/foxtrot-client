@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -46,6 +47,7 @@ public class DummyEventHandler implements HttpRequestHandler {
             List<Document> documents = mapper.readValue(EntityUtils.toByteArray(post.getEntity()), new TypeReference<List<Document>>() {});
             counter.addAndGet(documents.size());
             logger.info("Received {} documents.", documents.size());
+            logger.info("Headers: " + Arrays.toString(post.getAllHeaders()));
         } catch (Exception e) {
             logger.error("Error: ", e);
         }
