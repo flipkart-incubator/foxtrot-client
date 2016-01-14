@@ -27,7 +27,7 @@ Use the following maven dependency:
     <dependency>
       <groupId>com.flipkart.foxtrot</groupId>
       <artifactId>foxtrot-client</artifactId>
-      <version>0.1-SNAPSHOT</version>
+      <version>0.2.2</version>
     </dependency>
     
 ## Show me the code
