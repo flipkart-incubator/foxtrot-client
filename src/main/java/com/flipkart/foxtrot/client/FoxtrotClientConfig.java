@@ -31,9 +31,10 @@ public class FoxtrotClientConfig {
 
     /**
      * Type of client which will init. Can be any of {@link com.flipkart.foxtrot.client.ClientType}
-     * Default value is {@link com.flipkart.foxtrot.client.ClientType#async}
+     * Default value is {@link com.flipkart.foxtrot.client.ClientType#sync}.
+     * WARN: The Async client suffers from a memory leak, do not use it for now. {@see https://issues.apache.org/jira/browse/HTTPASYNC-94}
      */
-    private ClientType clientType = ClientType.async;
+    private ClientType clientType = ClientType.sync;
 
     /**
      * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued}
@@ -41,6 +42,11 @@ public class FoxtrotClientConfig {
      * Temporary file system path where events will be saved before ingestion.
      */
     private String queuePath;
+
+    /**
+     * Connection keepalive time
+     */
+    private long keepAliveTimeMillis = 30000;
 
     /**
      * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued}
@@ -115,5 +121,13 @@ public class FoxtrotClientConfig {
 
     public void setQueuePath(String queuePath) {
         this.queuePath = queuePath;
+    }
+
+    public long getKeepAliveTimeMillis() {
+        return keepAliveTimeMillis;
+    }
+
+    public void setKeepAliveTimeMillis(long keepAliveTimeMillis) {
+        this.keepAliveTimeMillis = keepAliveTimeMillis;
     }
 }

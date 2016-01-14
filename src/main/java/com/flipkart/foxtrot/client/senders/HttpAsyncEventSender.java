@@ -5,6 +5,7 @@ import com.flipkart.foxtrot.client.EventSender;
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
+import com.flipkart.foxtrot.client.senders.impl.CustomKeepAliveStrategy;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
@@ -15,6 +16,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.conn.ConnectionKeepAliveStrategy;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
@@ -23,6 +25,7 @@ import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.conn.NHttpClientConnectionManager;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.nio.reactor.IOReactorException;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,14 +47,18 @@ public class HttpAsyncEventSender extends EventSender {
     private final ScheduledExecutorService executorService;
     private CloseableHttpAsyncClient httpClient;
 
-    public HttpAsyncEventSender(FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler) throws IOReactorException {
+    public HttpAsyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler) throws IOReactorException {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
         ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
         PoolingNHttpClientConnectionManager cm = new PoolingNHttpClientConnectionManager(ioReactor);
         cm.setMaxTotal(1024); //Probably max number of foxtrot hosts
-        this.httpClient = HttpAsyncClients.custom().setConnectionManager(cm).build();
+        cm.setDefaultMaxPerRoute(1); //Max connections more than one is useless as there is only one thread
+        this.httpClient = HttpAsyncClients.custom()
+                .setConnectionManager(cm)
+                .setKeepAliveStrategy(new CustomKeepAliveStrategy(config))
+                .build();
         Evictor connEvictor = new Evictor(table, cm);
         executorService = Executors.newScheduledThreadPool(1);
         executorService.scheduleWithFixedDelay(connEvictor, 1, 5, TimeUnit.SECONDS);
@@ -97,13 +104,14 @@ public class HttpAsyncEventSender extends EventSender {
             post.setEntity(new ByteArrayEntity(payload));
             httpClient.execute(post, new FutureCallback<HttpResponse>() {
                 public void completed(final HttpResponse response) {
-                    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                        try {
-                            logger.error("table={} message_sending_failed api_response={}",
-                                    new Object[]{table, EntityUtils.toString(response.getEntity())});
-                        } catch (IOException e) {
-                            logger.error("table={} api_response_deserialization_failed", new Object[]{table}, e);
+                    try {
+                        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
+                                logger.error("table={} message_sending_failed api_response={}",
+                                        new Object[]{table, EntityUtils.toString(response.getEntity())});
                         }
+                        logger.debug("Payload: {}", EntityUtils.toString(response.getEntity()));
+                    } catch (IOException e) {
+                        logger.error("table={} api_response_deserialization_failed", new Object[]{table}, e);
                     }
                 }
 

@@ -1,6 +1,7 @@
 package com.flipkart.foxtrot.client.cluster;
 
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
+import com.flipkart.foxtrot.client.senders.impl.CustomKeepAliveStrategy;
 import com.flipkart.foxtrot.client.serialization.FoxtrotClusterResponseSerializationHandler;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ClusterStatusUpdater implements Runnable {
@@ -44,6 +46,9 @@ public class ClusterStatusUpdater implements Runnable {
         connectionManager.setMaxPerRoute(
                 new HttpRoute(new HttpHost(config.getHost(), config.getPort())), config.getMaxConnections());
         CloseableHttpClient httpClient = HttpClients.custom()
+                .setKeepAliveStrategy(new CustomKeepAliveStrategy(config))
+                .evictExpiredConnections()
+                .evictIdleConnections(5L, TimeUnit.SECONDS)
                 .setConnectionManager(connectionManager)
                 .build();
 
@@ -72,7 +77,7 @@ public class ClusterStatusUpdater implements Runnable {
             }
             HttpEntity entity = response.getEntity();
             final byte data[] =EntityUtils.toByteArray(entity);
-            logger.trace("Received data: {}", new String(data));
+            logger.debug("Received data: {}", new String(data));
             FoxtrotClusterStatus foxtrotClusterStatus = serializationHandler.deserialize(data);
             status.set(foxtrotClusterStatus);
         } catch (Exception e) {
