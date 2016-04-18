@@ -20,29 +20,21 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
-import com.flipkart.foxtrot.client.handlers.DummyDocRequestHandler;
-import com.flipkart.foxtrot.client.handlers.DummyEventHandler;
 import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
-import com.flipkart.foxtrot.client.serialization.JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
-import com.google.common.collect.ImmutableMap;
-import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.UUID;
 
-public class EventSyncSendTest {
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
-    private DummyEventHandler eventHandler = new DummyEventHandler();
-    private TestHostPort testHostPort = new TestHostPort();
-    @Rule
-    public LocalServerTestRule localServerTestRule
-            = new LocalServerTestRule(testHostPort,
-            ImmutableMap.of("/foxtrot/v1/cluster/members", new DummyDocRequestHandler(),
-                    "/foxtrot/v1/document/test/bulk", eventHandler));
+public class EventSyncSendTest extends BaseTest {
+
+    private TestHostPort testHostPort = new TestHostPort("localhost", 8888);
 
     @Test
     public void testSyncSend() throws Exception {
@@ -55,7 +47,7 @@ public class EventSyncSendTest {
             public FoxtrotClusterMember selectMember(List<FoxtrotClusterMember> members) {
                 return new FoxtrotClusterMember(testHostPort.getHostName(), testHostPort.getPort());
             }
-        }, JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl.INSTANCE);
+        });
         HttpSyncEventSender eventSender = new HttpSyncEventSender(clientConfig, foxtrotCluster, JacksonJsonSerializationHandler.INSTANCE);
 
         FoxtrotClient client = new FoxtrotClient(foxtrotCluster, eventSender);
@@ -74,7 +66,7 @@ public class EventSyncSendTest {
                 e.printStackTrace();
             }
         }
-        Assert.assertEquals(200, eventHandler.getCounter().get());
+        verify(200, postRequestedFor(urlEqualTo("/foxtrot/v1/document/test/bulk")));
         client.close();
     }
 

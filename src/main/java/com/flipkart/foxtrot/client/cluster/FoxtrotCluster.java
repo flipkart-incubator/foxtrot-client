@@ -2,7 +2,6 @@ package com.flipkart.foxtrot.client.cluster;
 
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.selectors.MemberSelector;
-import com.flipkart.foxtrot.client.serialization.FoxtrotClusterResponseSerializationHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +21,11 @@ public class FoxtrotCluster {
     private AtomicReference<FoxtrotClusterStatus> status = new AtomicReference<>();
 
     public FoxtrotCluster(FoxtrotClientConfig config,
-                          MemberSelector selector,
-                          FoxtrotClusterResponseSerializationHandler serializationHandler) throws Exception {
+                          MemberSelector selector) throws Exception {
         this.selector = selector;
         this.clientConfig = config;
         executorService = Executors.newScheduledThreadPool(1);
-        ClusterStatusUpdater updater = ClusterStatusUpdater.create(config, status, serializationHandler);
+        ClusterStatusUpdater updater = ClusterStatusUpdater.create(config, status);
         updater.loadClusterData();
         future = executorService.scheduleWithFixedDelay(updater, config.getRefreshIntervalSecs(),
                 config.getRefreshIntervalSecs(), TimeUnit.SECONDS);

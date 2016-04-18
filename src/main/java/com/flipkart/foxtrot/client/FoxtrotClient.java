@@ -7,7 +7,6 @@ import com.flipkart.foxtrot.client.senders.HttpAsyncEventSender;
 import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
 import com.flipkart.foxtrot.client.senders.QueuedSender;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
-import com.flipkart.foxtrot.client.serialization.JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
 import com.flipkart.foxtrot.client.util.TypeChecker;
 import com.google.common.base.Preconditions;
@@ -27,8 +26,7 @@ public class FoxtrotClient {
     public FoxtrotClient(FoxtrotClientConfig config,
                          MemberSelector memberSelector,
                          EventSerializationHandler serializationHandler) throws Exception {
-        this.foxtrotCluster = new FoxtrotCluster(config, memberSelector,
-                JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl.INSTANCE);
+        this.foxtrotCluster = new FoxtrotCluster(config, memberSelector);
         Preconditions.checkNotNull(config.getTable());
         Preconditions.checkNotNull(config.getClientType());
         Preconditions.checkNotNull(config.getHost());
