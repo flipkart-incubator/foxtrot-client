@@ -12,8 +12,6 @@ import com.google.common.base.Preconditions;
 import feign.Feign;
 import feign.FeignException;
 import feign.Response;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 import org.slf4j.Logger;
@@ -29,8 +27,6 @@ public class HttpSyncEventSender extends EventSender {
     private final FoxtrotCluster client;
     private FoxtrotHttpClient httpClient;
 
-    private final static JacksonDecoder decoder = new JacksonDecoder();
-    private final static JacksonEncoder encoder = new JacksonEncoder();
     private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
 
 
@@ -39,8 +35,6 @@ public class HttpSyncEventSender extends EventSender {
         this.table = config.getTable();
         this.client = client;
         this.httpClient = Feign.builder()
-                .decoder(decoder)
-                .encoder(encoder)
                 .client(new OkHttpClient())
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
@@ -71,8 +65,8 @@ public class HttpSyncEventSender extends EventSender {
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
         try {
             Response response = httpClient.send(table, payload);
-            if (response.status() != 200 && response.status() != 201 && response.status() != 202) {
-                throw new RuntimeException(String.format("table=%s event_send_failed exception_message=%s", table, response.reason()));
+            if (response.status() != 201) {
+                throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
             }
             logger.info("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
         } catch (FeignException e) {

@@ -12,8 +12,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.*;
 import feign.Feign;
 import feign.Response;
-import feign.jackson.JacksonDecoder;
-import feign.jackson.JacksonEncoder;
 import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 import org.slf4j.Logger;
@@ -27,17 +25,15 @@ import java.util.concurrent.Executors;
 public class HttpAsyncEventSender extends EventSender {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpAsyncEventSender.class.getSimpleName());
-
-
-    private final static JacksonDecoder decoder = new JacksonDecoder();
-    private final static JacksonEncoder encoder = new JacksonEncoder();
     private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
 
     private String table;
     private FoxtrotCluster client;
     private FoxtrotHttpClient httpClient;
 
-    private ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+    private ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors() * 2
+    ));
 
     public HttpAsyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler)  {
         super(serializationHandler);
