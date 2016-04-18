@@ -5,54 +5,46 @@ import com.flipkart.foxtrot.client.EventSender;
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
-import com.flipkart.foxtrot.client.senders.impl.CustomKeepAliveStrategy;
+import com.flipkart.foxtrot.client.selectors.FoxtrotTarget;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
-import com.google.common.net.MediaType;
-import org.apache.http.*;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.message.BasicHeaderElementIterator;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
+import feign.Feign;
+import feign.FeignException;
+import feign.Response;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.okhttp.OkHttpClient;
+import feign.slf4j.Slf4jLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class HttpSyncEventSender extends EventSender {
     private static final Logger logger = LoggerFactory.getLogger(HttpSyncEventSender.class.getSimpleName());
 
     private final String table;
     private final FoxtrotCluster client;
-    private CloseableHttpClient httpClient;
+    private FoxtrotHttpClient httpClient;
+
+    private final static JacksonDecoder decoder = new JacksonDecoder();
+    private final static JacksonEncoder encoder = new JacksonEncoder();
+    private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
+
 
     public HttpSyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler) {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
-        PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
-        cm.setMaxTotal(1024); //Probably max number of foxtrot hosts
-        cm.setDefaultMaxPerRoute(1); //Useless to set more per route as only one thread is sending data
-        this.httpClient = HttpClients.custom()
-                .setConnectionManager(cm)
-                .setKeepAliveStrategy(new CustomKeepAliveStrategy(config))
-                .evictExpiredConnections()
-                .evictIdleConnections(5L, TimeUnit.SECONDS)
-                .build();
+        this.httpClient = Feign.builder()
+                .decoder(decoder)
+                .encoder(encoder)
+                .client(new OkHttpClient())
+                .logger(slf4jLogger)
+                .logLevel(feign.Logger.Level.BASIC)
+                .target(new FoxtrotTarget<FoxtrotHttpClient>(FoxtrotHttpClient.class, "foxtrot", client));
     }
 
     @Override
@@ -71,42 +63,20 @@ public class HttpSyncEventSender extends EventSender {
 
     @Override
     public void close() throws Exception {
-        logger.info("table={} closing_http_client", new Object[]{table});
-        httpClient.close();
-        logger.info("table={} closed_http_client", new Object[]{table});
+
     }
 
     public void send(byte[] payload) {
         FoxtrotClusterMember clusterMember = client.member();
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
-        CloseableHttpResponse response = null;
         try {
-            URI requestURI = new URIBuilder()
-                    .setScheme("http")
-                    .setHost(clusterMember.getHost())
-                    .setPort(clusterMember.getPort())
-                    .setPath(String.format("/foxtrot/v1/document/%s/bulk", table))
-                    .build();
-            HttpPost post = new HttpPost(requestURI);
-            post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
-            post.setEntity(new ByteArrayEntity(payload));
-            response = httpClient.execute(post);
-            if (response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                throw new RuntimeException(String.format("table=%s event_send_failed exception_message=%s", table, EntityUtils.toString(response.getEntity())));
+            Response response = httpClient.send(table, payload);
+            if (response.status() != 200 && response.status() != 201 && response.status() != 202) {
+                throw new RuntimeException(String.format("table=%s event_send_failed exception_message=%s", table, response.reason()));
             }
             logger.info("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
-        } catch (URISyntaxException | IOException e) {
-            e.printStackTrace();
+        } catch (FeignException e) {
             logger.error("table={} event_publish_failed", new Object[]{table}, e);
-        } finally {
-            if (null != response) {
-                try {
-                    response.close();
-                } catch (IOException e) {
-                    logger.error("table={} http_response_close_failed", new Object[]{table}, e);
-                }
-            }
         }
-
     }
 }

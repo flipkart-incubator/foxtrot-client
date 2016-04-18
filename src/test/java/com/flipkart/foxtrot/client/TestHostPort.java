@@ -18,6 +18,11 @@ public class TestHostPort {
     private String hostName;
     private int port;
 
+    public TestHostPort(final String hostName, final int port) {
+        this.hostName = hostName;
+        this.port = port;
+    }
+
     public TestHostPort() {
     }
 

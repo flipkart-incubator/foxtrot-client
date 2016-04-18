@@ -5,64 +5,49 @@ import com.flipkart.foxtrot.client.EventSender;
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
-import com.flipkart.foxtrot.client.senders.impl.CustomKeepAliveStrategy;
+import com.flipkart.foxtrot.client.selectors.FoxtrotTarget;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
-import com.google.common.net.MediaType;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.concurrent.FutureCallback;
-import org.apache.http.conn.ConnectionKeepAliveStrategy;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
-import org.apache.http.impl.nio.client.HttpAsyncClients;
-import org.apache.http.impl.nio.conn.PoolingNHttpClientConnectionManager;
-import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
-import org.apache.http.nio.conn.NHttpClientConnectionManager;
-import org.apache.http.nio.reactor.ConnectingIOReactor;
-import org.apache.http.nio.reactor.IOReactorException;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.util.EntityUtils;
+import com.google.common.util.concurrent.*;
+import feign.Feign;
+import feign.Response;
+import feign.jackson.JacksonDecoder;
+import feign.jackson.JacksonEncoder;
+import feign.okhttp.OkHttpClient;
+import feign.slf4j.Slf4jLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 public class HttpAsyncEventSender extends EventSender {
+
     private static final Logger logger = LoggerFactory.getLogger(HttpAsyncEventSender.class.getSimpleName());
 
-    private final String table;
-    private final FoxtrotCluster client;
-    private final ScheduledExecutorService executorService;
-    private CloseableHttpAsyncClient httpClient;
 
-    public HttpAsyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler) throws IOReactorException {
+    private final static JacksonDecoder decoder = new JacksonDecoder();
+    private final static JacksonEncoder encoder = new JacksonEncoder();
+    private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
+
+    private String table;
+    private FoxtrotCluster client;
+    private FoxtrotHttpClient httpClient;
+
+    private ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
+
+    public HttpAsyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler)  {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
-        ConnectingIOReactor ioReactor = new DefaultConnectingIOReactor();
-        PoolingNHttpClientConnectionManager cm = new PoolingNHttpClientConnectionManager(ioReactor);
-        cm.setMaxTotal(1024); //Probably max number of foxtrot hosts
-        cm.setDefaultMaxPerRoute(1); //Max connections more than one is useless as there is only one thread
-        this.httpClient = HttpAsyncClients.custom()
-                .setConnectionManager(cm)
-                .setKeepAliveStrategy(new CustomKeepAliveStrategy(config))
-                .build();
-        Evictor connEvictor = new Evictor(table, cm);
-        executorService = Executors.newScheduledThreadPool(1);
-        executorService.scheduleWithFixedDelay(connEvictor, 1, 5, TimeUnit.SECONDS);
-        httpClient.start();
+        this.httpClient = Feign.builder()
+                .client(new OkHttpClient())
+                .logger(slf4jLogger)
+                .logLevel(feign.Logger.Level.BASIC)
+                .target(new FoxtrotTarget<FoxtrotHttpClient>(FoxtrotHttpClient.class, "foxtrot", client));
     }
 
     @Override
@@ -81,75 +66,28 @@ public class HttpAsyncEventSender extends EventSender {
 
     @Override
     public void close() throws Exception {
-        logger.info("table={} shutting_down_executor_service", new Object[]{table});
-        executorService.shutdownNow();
-        logger.info("table={} executor_service_shutdown_completed", new Object[]{table});
-        logger.info("table={} closing_down_http_client", new Object[]{table});
-        httpClient.close();
-        logger.info("table={} closed_http_client", new Object[]{table});
+
     }
 
-    public void send(byte[] payload) {
-        FoxtrotClusterMember clusterMember = client.member();
+    public void send(final byte[] payload) {
+        final FoxtrotClusterMember clusterMember = client.member();
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
-        try {
-            URI requestURI = new URIBuilder()
-                    .setScheme("http")
-                    .setHost(clusterMember.getHost())
-                    .setPort(clusterMember.getPort())
-                    .setPath(String.format("/foxtrot/v1/document/%s/bulk", table))
-                    .build();
-            HttpPost post = new HttpPost(requestURI);
-            post.setHeader(HttpHeaders.CONTENT_TYPE, MediaType.JSON_UTF_8.toString());
-            post.setEntity(new ByteArrayEntity(payload));
-            httpClient.execute(post, new FutureCallback<HttpResponse>() {
-                public void completed(final HttpResponse response) {
-                    try {
-                        if (response.getStatusLine().getStatusCode() != HttpStatus.SC_CREATED) {
-                                logger.error("table={} message_sending_failed api_response={}",
-                                        new Object[]{table, EntityUtils.toString(response.getEntity())});
-                        }
-                        logger.debug("Payload: {}", EntityUtils.toString(response.getEntity()));
-                    } catch (IOException e) {
-                        logger.error("table={} api_response_deserialization_failed", new Object[]{table}, e);
-                    }
-                }
-
-                public void failed(final Exception ex) {
-                    logger.error("table={} message_sending_failed", new Object[]{table}, ex);
-                }
-
-                public void cancelled() {
-                    logger.error("table={} call_to_foxtrot_cancelled", new Object[]{table});
-                }
-
-            });
-            logger.debug("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
-        } catch (URISyntaxException e) {
-            logger.error("table={} invalid_uri_syntax", new Object[]{table}, e);
-        }
-
-    }
-
-    private static class Evictor implements Runnable {
-        private String table;
-        private final NHttpClientConnectionManager connectionManager;
-
-        public Evictor(String table, NHttpClientConnectionManager connectionManager) {
-            super();
-            this.table = table;
-            this.connectionManager = connectionManager;
-        }
-
-        @Override
-        public void run() {
-            try {
-                connectionManager.closeExpiredConnections();
-                connectionManager.closeIdleConnections(5, TimeUnit.SECONDS);
-            } catch (Exception ex) {
-                logger.error("table={} connection_cleanup_failed", new Object[]{table}, ex);
+        ListenableFuture<Response> response = executorService.submit(new Callable<Response>() {
+            @Override
+            public Response call() throws Exception {
+                return httpClient.send(table, payload);
             }
-        }
+        });
+        Futures.addCallback(response, new FutureCallback<Response>() {
+            @Override
+            public void onSuccess(Response response) {
+                logger.debug("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
+            }
 
+            @Override
+            public void onFailure(Throwable throwable) {
+                logger.error("table={} message_sending_failed", new Object[]{table}, throwable);
+            }
+        });
     }
 }

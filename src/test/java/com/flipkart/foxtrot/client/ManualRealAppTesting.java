@@ -35,7 +35,7 @@ public class ManualRealAppTesting {
             public FoxtrotClusterMember selectMember(List<FoxtrotClusterMember> members) {
                 return new FoxtrotClusterMember("192.168.99.100", 17000);  //CHANGE TO YOU LOCAL IP ON LINUX
             }
-        }, JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl.INSTANCE);
+        });
         HttpAsyncEventSender eventSender = new HttpAsyncEventSender(clientConfig, foxtrotCluster, JacksonJsonSerializationHandler.INSTANCE);
 
         FoxtrotClient client = new FoxtrotClient(foxtrotCluster, eventSender);
