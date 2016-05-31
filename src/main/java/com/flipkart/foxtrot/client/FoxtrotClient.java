@@ -86,7 +86,7 @@ public class FoxtrotClient {
 
     public void send(final String tableName, List<Document> documents) throws Exception {
         Preconditions.checkNotNull(tableName);
-        eventSender.send(documents);
+        eventSender.send(tableName, documents);
     }
 
     public void send(List<Document> documents) throws Exception {
