@@ -70,10 +70,20 @@ public class QueuedSender extends EventSender {
     }
 
     @Override
+    public void send(String table, Document document) throws Exception {
+        throw new IllegalAccessException("Send to table is not implemented for queued sender");
+    }
+
+    @Override
     public void send(List<Document> documents) throws Exception {
         for (Document document : documents) {
             this.messageQueue.enqueue(getSerializationHandler().serialize(document));
         }
+    }
+
+    @Override
+    public void send(String table, List<Document> documents) throws Exception {
+        throw new IllegalAccessException("Send to table is not implemented for queued sender");
     }
 
     @Override

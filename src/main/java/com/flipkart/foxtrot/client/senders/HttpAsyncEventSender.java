@@ -46,18 +46,28 @@ public class HttpAsyncEventSender extends EventSender {
                 .client(new OkHttpClient(okHttpClient))
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
-                .target(new FoxtrotTarget<FoxtrotHttpClient>(FoxtrotHttpClient.class, "foxtrot", client));
+                .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
     }
 
     @Override
-    public void send(Document document) {
-        send(Collections.singletonList(document));
+    public void send(Document document) throws Exception {
+        send(table, document);
     }
 
     @Override
-    public void send(List<Document> documents) {
+    public void send(String table, Document document) throws Exception {
+        send(table, Collections.singletonList(document));
+    }
+
+    @Override
+    public void send(List<Document> documents) throws Exception {
+        send(table, documents);
+    }
+
+    @Override
+    public void send(String table, List<Document> documents) throws Exception {
         try {
-            send(getSerializationHandler().serialize(documents));
+            send(table, getSerializationHandler().serialize(documents));
         } catch (SerializationException e) {
             throw new RuntimeException(e);
         }
@@ -68,7 +78,7 @@ public class HttpAsyncEventSender extends EventSender {
 
     }
 
-    public void send(final byte[] payload) {
+    public void send(final String table, final byte[] payload) {
         final FoxtrotClusterMember clusterMember = client.member();
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
         ListenableFuture<Response> response = executorService.submit(new Callable<Response>() {

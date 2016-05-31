@@ -12,7 +12,9 @@ public abstract class EventSender {
     }
 
     abstract public void send(Document document) throws Exception;
+    abstract public void send(final String table, Document document) throws Exception;
     abstract public void send(List<Document> documents) throws Exception;
+    abstract public void send(final String table, List<Document> documents) throws Exception;
 
     abstract public void close() throws Exception;
 

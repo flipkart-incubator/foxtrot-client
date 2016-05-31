@@ -45,17 +45,28 @@ public class HttpSyncEventSender extends EventSender {
     }
 
     @Override
-    public void send(Document document) {
-        send(Collections.singletonList(document));
+    public void send(Document document) throws Exception {
+        send(table, document);
     }
 
     @Override
-    public void send(List<Document> documents) {
+    public void send(String table, Document document) throws Exception {
+        send(table, Collections.singletonList(document));
+    }
+
+    @Override
+    public void send(List<Document> documents) throws Exception {
+        send(table, documents);
+    }
+
+    @Override
+    public void send(String table, List<Document> documents) throws Exception {
         try {
-            send(getSerializationHandler().serialize(documents));
+            send(table, getSerializationHandler().serialize(documents));
         } catch (SerializationException e) {
             throw new RuntimeException(e);
         }
+
     }
 
     @Override
@@ -63,7 +74,7 @@ public class HttpSyncEventSender extends EventSender {
 
     }
 
-    public void send(byte[] payload) {
+    public void send(final String table, byte[] payload) {
         FoxtrotClusterMember clusterMember = client.member();
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
         try {
