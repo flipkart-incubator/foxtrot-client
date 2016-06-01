@@ -77,6 +77,18 @@ public class FoxtrotClient {
         eventSender.send(document);
     }
 
+    public void send(final String tableName, Document document) throws Exception {
+        Preconditions.checkNotNull(document.getData());
+        Preconditions.checkArgument(!TypeChecker.isPrimitive(document.getData()));
+        Preconditions.checkNotNull(tableName);
+        eventSender.send(tableName, document);
+    }
+
+    public void send(final String tableName, List<Document> documents) throws Exception {
+        Preconditions.checkNotNull(tableName);
+        eventSender.send(tableName, documents);
+    }
+
     public void send(List<Document> documents) throws Exception {
         eventSender.send(documents);
     }
