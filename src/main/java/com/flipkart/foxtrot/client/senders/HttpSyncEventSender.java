@@ -79,12 +79,27 @@ public class HttpSyncEventSender extends EventSender {
         Preconditions.checkNotNull(clusterMember, "No members found in foxtrot cluster");
         try {
             Response response = httpClient.send(table, payload);
-            if (response.status() != 201) {
+            if (is2XX(response.status())) {
+                logger.info("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
+            } else if (is5XX(response.status())) {
                 throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
+            } else if (is4XX(response.status())) {
+                logger.error("table={} host={} port={} statusCode={}", table, clusterMember.getHost(), clusterMember.getPort(), response.status());
             }
-            logger.info("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
         } catch (FeignException e) {
-            logger.error("table={} event_publish_failed", new Object[]{table}, e);
+            logger.error("table={} msg=event_publish_failed", new Object[]{table}, e);
         }
+    }
+
+    private boolean is5XX(int status) {
+        return status / 100 == 5;
+    }
+
+    private boolean is4XX(int status) {
+        return status / 100 == 4;
+    }
+
+    private boolean is2XX(int status) {
+        return status / 100 == 2;
     }
 }
