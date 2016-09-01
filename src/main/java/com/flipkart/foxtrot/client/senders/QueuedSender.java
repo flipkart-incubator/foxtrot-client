@@ -1,11 +1,10 @@
 package com.flipkart.foxtrot.client.senders;
 
+import com.bluejeans.bigqueue.BigQueue;
 import com.flipkart.foxtrot.client.Document;
 import com.flipkart.foxtrot.client.EventSender;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.google.common.collect.Lists;
-import com.leansoft.bigqueue.BigQueueImpl;
-import com.leansoft.bigqueue.IBigQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +35,7 @@ public class QueuedSender extends EventSender {
     private final String path;
     private final MessageSenderThread messageSenderThread;
     private final ScheduledExecutorService scheduler;
-    private IBigQueue messageQueue;
+    private BigQueue messageQueue;
 
 
     /**
@@ -57,7 +56,7 @@ public class QueuedSender extends EventSender {
         Set<PosixFilePermission> perms = PosixFilePermissions.fromString("rwxrwxrwx");
         FileAttribute<Set<PosixFilePermission>> attr = PosixFilePermissions.asFileAttribute(perms);
         Files.createDirectories(Paths.get(path), attr);
-        this.messageQueue = new BigQueueImpl(path, "foxtrot-messages");
+        this.messageQueue = new BigQueue(path, "foxtrot-messages");
         this.messageSenderThread = new MessageSenderThread(this, eventSender, messageQueue, path, getSerializationHandler(), batchSize);
         this.scheduler = Executors.newScheduledThreadPool(2);
         scheduler.scheduleWithFixedDelay(messageSenderThread, 0, 1, TimeUnit.SECONDS);
@@ -108,14 +107,14 @@ public class QueuedSender extends EventSender {
         private final QueuedSender sender;
         private final EventSerializationHandler serializationHandler;
         private EventSender eventSender;
-        private IBigQueue messageQueue;
+        private BigQueue messageQueue;
         private int batchSize;
         private String path;
         private AtomicBoolean running = new AtomicBoolean(false);
 
         public MessageSenderThread(QueuedSender queuedSender,
                                    EventSender eventSender,
-                                   IBigQueue messageQueue,
+                                   BigQueue messageQueue,
                                    String path,
                                    EventSerializationHandler serializationHandler,
                                    int batchSize) throws Exception {
@@ -188,10 +187,10 @@ public class QueuedSender extends EventSender {
     }
 
     private static final class QueueCleaner implements Runnable {
-        private IBigQueue messageQueue;
+        private BigQueue messageQueue;
         private String path;
 
-        private QueueCleaner(IBigQueue messageQueue, String path) {
+        private QueueCleaner(BigQueue messageQueue, String path) {
             this.messageQueue = messageQueue;
             this.path = path;
         }
