@@ -9,7 +9,6 @@ import com.flipkart.foxtrot.client.selectors.FoxtrotTarget;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
-import com.squareup.okhttp.ConnectionPool;
 import feign.Feign;
 import feign.FeignException;
 import feign.Response;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class HttpSyncEventSender extends EventSender {
     private static final Logger logger = LoggerFactory.getLogger(HttpSyncEventSender.class.getSimpleName());
@@ -35,13 +35,13 @@ public class HttpSyncEventSender extends EventSender {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
-        com.squareup.okhttp.OkHttpClient okHttpClient = new com.squareup.okhttp.OkHttpClient();
-        okHttpClient.setConnectionPool(new ConnectionPool(config.getMaxConnections(), config.getKeepAliveTimeMillis()));
+        okhttp3.OkHttpClient.Builder okHttpClient = new okhttp3.OkHttpClient.Builder();
+        okHttpClient.connectionPool(new okhttp3.ConnectionPool(config.getMaxConnections(), config.getKeepAliveTimeMillis(), TimeUnit.MILLISECONDS));
         this.httpClient = Feign.builder()
-                .client(new OkHttpClient(okHttpClient))
+                .client(new OkHttpClient(okHttpClient.build()))
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
-                .target(new FoxtrotTarget<FoxtrotHttpClient>(FoxtrotHttpClient.class, "foxtrot", client));
+                .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
     }
 
     @Override
