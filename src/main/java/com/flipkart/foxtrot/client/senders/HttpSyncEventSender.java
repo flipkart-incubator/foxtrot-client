@@ -81,7 +81,7 @@ public class HttpSyncEventSender extends EventSender {
             Response response = httpClient.send(table, payload);
             if (is2XX(response.status())) {
                 logger.info("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
-            } else if (is5XX(response.status())) {
+            } else if (is5XX(response.status()) || response.status() == 404) {
                 throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
             } else if (is4XX(response.status())) {
                 logger.error("table={} host={} port={} statusCode={}", table, clusterMember.getHost(), clusterMember.getPort(), response.status());
