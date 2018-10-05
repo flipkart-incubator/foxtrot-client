@@ -50,6 +50,11 @@
             <name>Rishabh Goyal</name>
             <email>rgoyal2191@gmail.com</email>
         </developer>
+        <developer>
+            <id>nitishgoyl13</id>
+            <name>Nitish Goyal</name>
+            <email>nitishgoyal13@gmail.com</email>
+        </developer>
     </developers>
 
     <repositories>
