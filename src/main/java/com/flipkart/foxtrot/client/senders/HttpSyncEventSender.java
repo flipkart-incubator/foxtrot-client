@@ -41,26 +41,26 @@ public class HttpSyncEventSender extends EventSender {
                 .client(new OkHttpClient(okHttpClient))
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
-                .target(new FoxtrotTarget<FoxtrotHttpClient>(FoxtrotHttpClient.class, "foxtrot", client));
+                .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
     }
 
     @Override
-    public void send(Document document) throws Exception {
+    public void send(Document document) {
         send(table, document);
     }
 
     @Override
-    public void send(String table, Document document) throws Exception {
+    public void send(String table, Document document) {
         send(table, Collections.singletonList(document));
     }
 
     @Override
-    public void send(List<Document> documents) throws Exception {
+    public void send(List<Document> documents) {
         send(table, documents);
     }
 
     @Override
-    public void send(String table, List<Document> documents) throws Exception {
+    public void send(String table, List<Document> documents) {
         try {
             send(table, getSerializationHandler().serialize(documents));
         } catch (SerializationException e) {
@@ -70,7 +70,7 @@ public class HttpSyncEventSender extends EventSender {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
 
     }
 
@@ -89,14 +89,6 @@ public class HttpSyncEventSender extends EventSender {
         } catch (FeignException e) {
             logger.error("table={} msg=event_publish_failed", new Object[]{table}, e);
         }
-    }
-
-    private boolean is5XX(int status) {
-        return status / 100 == 5;
-    }
-
-    private boolean is4XX(int status) {
-        return status / 100 == 4;
     }
 
     private boolean is2XX(int status) {

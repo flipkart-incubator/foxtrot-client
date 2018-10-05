@@ -7,7 +7,6 @@ import com.flipkart.foxtrot.client.cluster.FoxtrotClusterStatus;
 import java.io.IOException;
 
 public class JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl implements FoxtrotClusterResponseSerializationHandler {
-    public static final FoxtrotClusterResponseSerializationHandler INSTANCE = new JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl();
     private final ObjectMapper mapper;
 
     private JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl() {

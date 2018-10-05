@@ -28,8 +28,7 @@ public class ClusterStatusUpdater implements Runnable {
         this.httpClient = httpClient;
     }
 
-    public static ClusterStatusUpdater create(FoxtrotClientConfig config,
-                                              AtomicReference<FoxtrotClusterStatus> status) {
+    static ClusterStatusUpdater create(FoxtrotClientConfig config, AtomicReference<FoxtrotClusterStatus> status) {
 
         FoxtrotClusterHttpClient httpClient = Feign.builder()
                 .decoder(decoder)
@@ -46,7 +45,7 @@ public class ClusterStatusUpdater implements Runnable {
         loadClusterData();
     }
 
-    public void loadClusterData() {
+    void loadClusterData() {
         try {
             logger.trace("Initiating data get");
             status.set(httpClient.load());
