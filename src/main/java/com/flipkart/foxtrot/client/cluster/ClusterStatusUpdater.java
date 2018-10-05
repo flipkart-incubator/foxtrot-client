@@ -19,9 +19,9 @@ public class ClusterStatusUpdater implements Runnable {
 
     private AtomicReference<FoxtrotClusterStatus> status;
 
-    final static JacksonDecoder decoder = new JacksonDecoder();
-    final static JacksonEncoder encoder = new JacksonEncoder();
-    final static Slf4jLogger slf4jLogger = new Slf4jLogger();
+    private final static JacksonDecoder decoder = new JacksonDecoder();
+    private final static JacksonEncoder encoder = new JacksonEncoder();
+    private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
 
     private ClusterStatusUpdater(AtomicReference<FoxtrotClusterStatus> status, FoxtrotClusterHttpClient httpClient) {
         this.status = status;
@@ -29,7 +29,7 @@ public class ClusterStatusUpdater implements Runnable {
     }
 
     public static ClusterStatusUpdater create(FoxtrotClientConfig config,
-                                              AtomicReference<FoxtrotClusterStatus> status) throws Exception {
+                                              AtomicReference<FoxtrotClusterStatus> status) {
 
         FoxtrotClusterHttpClient httpClient = Feign.builder()
                 .decoder(decoder)
