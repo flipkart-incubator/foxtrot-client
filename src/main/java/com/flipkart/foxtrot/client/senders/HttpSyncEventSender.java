@@ -88,6 +88,7 @@ public class HttpSyncEventSender extends EventSender {
             }
         } catch (FeignException e) {
             logger.error("table={} msg=event_publish_failed", new Object[]{table}, e);
+            throw new RuntimeException("msg=event_publish_failed with exception : " , e);
         }
     }
 

@@ -6,7 +6,7 @@
 
     <groupId>com.flipkart.foxtrot</groupId>
     <artifactId>foxtrot-client</artifactId>
-    <version>0.2.7-SNAPSHOT</version>
+    <version>0.2.8</version>
 
     <properties>
         <feign.version>8.15.1</feign.version>
