@@ -112,8 +112,12 @@ public class QueuedSender extends EventSender {
         private String path;
         private AtomicBoolean running = new AtomicBoolean(false);
 
-        MessageSenderThread(QueuedSender queuedSender, EventSender eventSender, BigQueue messageQueue, String path,
-                            EventSerializationHandler serializationHandler, int batchSize) {
+        MessageSenderThread(QueuedSender queuedSender,
+                            EventSender eventSender,
+                            BigQueue messageQueue,
+                            String path,
+                            EventSerializationHandler serializationHandler,
+                            int batchSize) {
             this.sender = queuedSender;
             this.eventSender = eventSender;
             this.messageQueue = messageQueue;
