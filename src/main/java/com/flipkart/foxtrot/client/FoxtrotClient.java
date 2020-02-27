@@ -93,7 +93,7 @@ public class FoxtrotClient {
         eventSender.send(documents);
     }
 
-    void close() throws Exception {
+    public void close() throws Exception {
         eventSender.close();
         foxtrotCluster.stop();
     }

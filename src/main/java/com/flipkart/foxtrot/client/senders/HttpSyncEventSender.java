@@ -83,7 +83,14 @@ public class HttpSyncEventSender extends EventSender {
                 logger.info("table={} messages_sent host={} port={}", table, clusterMember.getHost(), clusterMember.getPort());
             } else if (response.status() == 400) {
                 logger.error("table={} host={} port={} statusCode={}", table, clusterMember.getHost(), clusterMember.getPort(), response.status());
-            } else {
+            } else if (response.status() == 500){
+                //TODO Based on reason we set in foxtrot server
+                if (response.reason().equals("")){
+
+                }else{
+                    throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
+                }
+            }else {
                 throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
             }
         } catch (FeignException e) {

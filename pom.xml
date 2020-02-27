@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.flipkart.foxtrot</groupId>
-    <artifactId>foxtrot-client</artifactId>
+    <artifactId>foxtrot-client.retriable</artifactId>
     <version>0.2.8</version>
 
     <properties>
@@ -138,6 +138,11 @@
             <groupId>com.squareup.okhttp</groupId>
             <artifactId>okhttp</artifactId>
             <version>2.7.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.flipkart.foxtrot</groupId>
+            <artifactId>foxtrot-core</artifactId>
+            <version>6.3.1-36</version>
         </dependency>
     </dependencies>
 
