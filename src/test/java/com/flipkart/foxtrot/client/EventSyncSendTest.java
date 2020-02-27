@@ -34,13 +34,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 public class EventSyncSendTest extends BaseTest {
 
-    private TestHostPort testHostPort = new TestHostPort("localhost", 8888);
+    private TestHostPort testHostPort = new TestHostPort("localhost", 17000);
 
     @Test
     public void testSyncSend() throws Exception {
         FoxtrotClientConfig clientConfig = new FoxtrotClientConfig();
         clientConfig.setHost(testHostPort.getHostName());
         clientConfig.setPort(testHostPort.getPort());
+        clientConfig.setCommaSeparatedIgnorableFailureMessages("timeout");
         clientConfig.setTable("test");
         FoxtrotCluster foxtrotCluster = new FoxtrotCluster(clientConfig, new MemberSelector() {
             @Override

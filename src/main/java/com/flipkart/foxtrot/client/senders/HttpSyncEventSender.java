@@ -9,12 +9,14 @@ import com.flipkart.foxtrot.client.selectors.FoxtrotTarget;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.squareup.okhttp.ConnectionPool;
 import feign.Feign;
 import feign.FeignException;
 import feign.Response;
 import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
+import java.util.Arrays;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +32,8 @@ public class HttpSyncEventSender extends EventSender {
 
     private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
 
+    private static List<String> ignoreableFailureReasons = Lists.newArrayList();
+
 
     public HttpSyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client, EventSerializationHandler serializationHandler) {
         super(serializationHandler);
@@ -42,6 +46,7 @@ public class HttpSyncEventSender extends EventSender {
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
                 .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
+        ignoreableFailureReasons = Arrays.asList(config.getCommaSeparatedIgnorableFailureMessages().split(","));
     }
 
     @Override
@@ -84,10 +89,14 @@ public class HttpSyncEventSender extends EventSender {
             } else if (response.status() == 400) {
                 logger.error("table={} host={} port={} statusCode={}", table, clusterMember.getHost(), clusterMember.getPort(), response.status());
             } else if (response.status() == 500){
-                //TODO Based on reason we set in foxtrot server
-                if (response.reason().equals("")){
-
-                }else{
+                final boolean[] ignoreException = {false};
+                //TODO Based on reason we set in foxtrot server. Need to add mapping parsing exception
+                ignoreableFailureReasons.forEach(s -> {
+                    if (response.reason().contains(s)){
+                        ignoreException[0] = true;
+                    }
+                });
+                if (!ignoreException[0]){
                     throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
                 }
             }else {

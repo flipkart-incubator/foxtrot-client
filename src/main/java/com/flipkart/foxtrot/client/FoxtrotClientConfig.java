@@ -1,5 +1,8 @@
 package com.flipkart.foxtrot.client;
 
+import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * Configuration for the foxtrot client.
  */
@@ -55,6 +58,8 @@ public class FoxtrotClientConfig {
      * (Default: 200)
      */
     private int batchSize = 200;
+
+    private String commaSeparatedIgnorableFailureMessages = StringUtils.EMPTY;
 
     public FoxtrotClientConfig() {
     }
@@ -129,5 +134,13 @@ public class FoxtrotClientConfig {
 
     public void setKeepAliveTimeMillis(long keepAliveTimeMillis) {
         this.keepAliveTimeMillis = keepAliveTimeMillis;
+    }
+
+    public String getCommaSeparatedIgnorableFailureMessages() {
+        return commaSeparatedIgnorableFailureMessages;
+    }
+
+    public void setCommaSeparatedIgnorableFailureMessages(String commaSeparatedIgnorableFailureMessages) {
+        this.commaSeparatedIgnorableFailureMessages = commaSeparatedIgnorableFailureMessages;
     }
 }
