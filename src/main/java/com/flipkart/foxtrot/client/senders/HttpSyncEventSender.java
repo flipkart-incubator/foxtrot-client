@@ -45,6 +45,7 @@ public class HttpSyncEventSender extends EventSender {
     private final static Slf4jLogger slf4jLogger = new Slf4jLogger();
 
     private static final String ERROR_MESSAGE = "message";
+    private static final String SERVER_ERROR = "500 INTERNAL SERVER ERROR";
 
     private static List<String> ignoreableFailureReasons = Lists.newArrayList();
 
@@ -118,7 +119,7 @@ public class HttpSyncEventSender extends EventSender {
 
                 Map<String, Object> responseMap = JsonUtils.readMapFromString(responseBody);
 
-                Optional<String> throwableFailure = Optional.empty();
+                Optional<String> throwableFailure = Optional.of(SERVER_ERROR);
                 if (responseMap.containsKey(ERROR_MESSAGE)
                         && responseMap.get(ERROR_MESSAGE) instanceof String
                         && Strings.isNotBlank((String) responseMap.get(ERROR_MESSAGE))) {
@@ -136,9 +137,10 @@ public class HttpSyncEventSender extends EventSender {
 
                 //This is done in case there is even 1 exception which needs retry
                 if (throwableFailure.isPresent()) {
-                    logger.error("table={} event_send_failed  host={} port={} statusCode={} exception_message={}",
+                    logger.error(
+                            "table={} event_send_failed  host={} port={} statusCode={} reason={} response={} exception_message={}",
                             table, clusterMember.getHost(), clusterMember.getPort(), response.status(),
-                            throwableFailure.get());
+                            response.reason(), responseBody throwableFailure.get());
                     throw new RuntimeException(
                             String.format("table=%s event_send_failed status [%d] exception_message=%s", table,
                                     response.status(), throwableFailure.get()));
