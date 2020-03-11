@@ -4,9 +4,9 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.flipkart.foxtrot</groupId>
+    <groupId>com.foxtrot</groupId>
     <artifactId>foxtrot-client</artifactId>
-    <version>0.2.8</version>
+    <version>0.2.10-SNAPSHOT</version>
 
     <properties>
         <feign.version>8.15.1</feign.version>
@@ -142,7 +142,7 @@
         <dependency>
             <groupId>com.flipkart.foxtrot</groupId>
             <artifactId>foxtrot-core</artifactId>
-            <version>6.3.1-36</version>
+            <version>6.3.1-37</version>
         </dependency>
     </dependencies>
 

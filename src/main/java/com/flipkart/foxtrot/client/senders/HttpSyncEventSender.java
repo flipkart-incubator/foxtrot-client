@@ -8,6 +8,7 @@ import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.selectors.FoxtrotTarget;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
+import com.flipkart.foxtrot.core.querystore.impl.ElasticsearchQueryStore;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.squareup.okhttp.ConnectionPool;
@@ -90,13 +91,24 @@ public class HttpSyncEventSender extends EventSender {
                 logger.error("table={} host={} port={} statusCode={}", table, clusterMember.getHost(), clusterMember.getPort(), response.status());
             } else if (response.status() == 500){
                 final boolean[] ignoreException = {false};
+                final boolean[] throwException = {false};
+                String[] failureReasons = response.reason().split(ElasticsearchQueryStore.ERROR_DELIMITER);
                 //TODO Based on reason we set in foxtrot server. Need to add mapping parsing exception
                 ignoreableFailureReasons.forEach(s -> {
-                    if (response.reason().contains(s)){
-                        ignoreException[0] = true;
+                    if (failureReasons.length != 0){
+                        Arrays.asList(failureReasons).forEach(reason -> {
+                            if (reason.contains(s)){
+                                logger.info("Ignoring exceptions");
+                                ignoreException[0] = true;
+                            }else{
+                                throwException[0] = true;
+                            }
+                        });
+
                     }
                 });
-                if (!ignoreException[0]){
+                //This is done in case there is even 1 exception which needs retry
+                if (!ignoreException[0] || (throwException[0] && ignoreException[0])){
                     throw new RuntimeException(String.format("table=%s event_send_failed status [%d] exception_message=%s", table, response.status(), response.reason()));
                 }
             }else {
