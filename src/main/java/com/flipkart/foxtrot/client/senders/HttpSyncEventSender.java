@@ -140,7 +140,7 @@ public class HttpSyncEventSender extends EventSender {
                     logger.error(
                             "table={} event_send_failed  host={} port={} statusCode={} reason={} response={} exception_message={}",
                             table, clusterMember.getHost(), clusterMember.getPort(), response.status(),
-                            response.reason(), responseBody throwableFailure.get());
+                            response.reason(), responseBody, throwableFailure.get());
                     throw new RuntimeException(
                             String.format("table=%s event_send_failed status [%d] exception_message=%s", table,
                                     response.status(), throwableFailure.get()));
