@@ -23,6 +23,8 @@ import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
+import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Test;
 
 import java.util.List;
@@ -41,7 +43,7 @@ public class EventSyncSendTest extends BaseTest {
         FoxtrotClientConfig clientConfig = new FoxtrotClientConfig();
         clientConfig.setHost(testHostPort.getHostName());
         clientConfig.setPort(testHostPort.getPort());
-        clientConfig.setCommaSeparatedIgnorableFailureMessages("timeout");
+        clientConfig.setIgnorableFailureMessagePatterns(Collections.singletonList("timeout"));
         clientConfig.setTable("test");
         FoxtrotCluster foxtrotCluster = new FoxtrotCluster(clientConfig, new MemberSelector() {
             @Override

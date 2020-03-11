@@ -13,6 +13,7 @@
         <wiremock.version>1.58</wiremock.version>
         <junit.version>4.12</junit.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <commons.io.version>2.4</commons.io.version>
     </properties>
 
     <distributionManagement>
@@ -144,6 +145,12 @@
             <artifactId>foxtrot-core</artifactId>
             <version>6.3.1-37</version>
         </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons.io.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>
