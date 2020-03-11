@@ -17,10 +17,10 @@ public class BaseTest {
 
     final ObjectMapper objectMapper = new ObjectMapper();
 
-    final FoxtrotClusterStatus clusterStatus = new FoxtrotClusterStatus(Collections.singletonList(new FoxtrotClusterMember("localhost", 8080)));
+    final FoxtrotClusterStatus clusterStatus = new FoxtrotClusterStatus(Collections.singletonList(new FoxtrotClusterMember("localhost", 17000)));
 
     @Rule
-    public WireMockRule wireMockRule = new WireMockRule(8888);
+    public WireMockRule wireMockRule = new WireMockRule(17000);
 
     @Before
     public void setup() throws JsonProcessingException {
