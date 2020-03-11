@@ -20,6 +20,8 @@ import feign.Response;
 import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,13 +29,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.ws.rs.core.Response.Status.Family;
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Collections;
-import java.util.List;
-import org.apache.commons.io.IOUtils;
 
 public class HttpSyncEventSender extends EventSender {
 
@@ -63,7 +62,7 @@ public class HttpSyncEventSender extends EventSender {
                 .logLevel(feign.Logger.Level.BASIC)
                 .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
 
-            ignoreableFailureReasons = config.getIgnorableFailureMessagePatterns();
+        ignoreableFailureReasons = config.getIgnorableFailureMessagePatterns();
     }
 
     @Override
