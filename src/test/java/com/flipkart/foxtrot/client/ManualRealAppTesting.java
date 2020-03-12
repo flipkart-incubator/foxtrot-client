@@ -6,14 +6,11 @@ import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.senders.HttpAsyncEventSender;
-import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
-import com.flipkart.foxtrot.client.serialization.JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import java.util.List;
 import java.util.UUID;
+import org.junit.Ignore;
+import org.junit.Test;
 
 /**
  * Created by santanu.s on 06/01/16.
