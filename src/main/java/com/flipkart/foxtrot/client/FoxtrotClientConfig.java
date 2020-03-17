@@ -28,6 +28,23 @@ public class FoxtrotClientConfig {
     private int maxConnections = 10;
 
     /**
+     * Connection keepalive time
+     */
+    private long keepAliveTimeMillis = 30000;
+
+    private int callTimeOutMs = 2000;
+
+    /**
+     * time period in which our client should establish a connection with a target host
+     */
+    private int connectTimeoutMs = 10000;
+
+    /**
+     * maximum time of inactivity between two data packets when waiting for the server's response.
+     */
+    private int opTimeoutMs = 10000;
+
+    /**
      * Cluster metadata polling interval in seconds. (Default: 1 sec)
      */
     private int refreshIntervalSecs = 1;
@@ -47,11 +64,6 @@ public class FoxtrotClientConfig {
     private String queuePath;
 
     /**
-     * Connection keepalive time
-     */
-    private long keepAliveTimeMillis = 30000;
-
-    /**
      * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued}
      * or {@link com.flipkart.foxtrot.client.ClientType#queued}
      * Number of messages to push per batch.
@@ -60,6 +72,7 @@ public class FoxtrotClientConfig {
     private int batchSize = 200;
 
     private List<String> ignorableFailureMessagePatterns = Collections.emptyList();
+
 
     public FoxtrotClientConfig() {
     }
@@ -143,4 +156,29 @@ public class FoxtrotClientConfig {
     public void setIgnorableFailureMessagePatterns(List<String> ignorableFailureMessagePatterns) {
         this.ignorableFailureMessagePatterns = ignorableFailureMessagePatterns;
     }
+
+    public int getCallTimeOutMs() {
+        return callTimeOutMs;
+    }
+
+    public void setCallTimeOutMs(int callTimeOutMs) {
+        this.callTimeOutMs = callTimeOutMs;
+    }
+
+    public int getConnectTimeoutMs() {
+        return connectTimeoutMs;
+    }
+
+    public void setConnectTimeoutMs(int connectTimeoutMs) {
+        this.connectTimeoutMs = connectTimeoutMs;
+    }
+
+    public int getOpTimeoutMs() {
+        return opTimeoutMs;
+    }
+
+    public void setOpTimeoutMs(int opTimeoutMs) {
+        this.opTimeoutMs = opTimeoutMs;
+    }
+
 }

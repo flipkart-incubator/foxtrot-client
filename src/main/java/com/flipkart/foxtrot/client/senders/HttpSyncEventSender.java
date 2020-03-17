@@ -31,6 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import static com.flipkart.foxtrot.client.util.CommonUtils.createOkHttpClient;
+
 public class HttpSyncEventSender extends EventSender {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpSyncEventSender.class.getSimpleName());
@@ -52,10 +54,8 @@ public class HttpSyncEventSender extends EventSender {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
-        com.squareup.okhttp.OkHttpClient okHttpClient = new com.squareup.okhttp.OkHttpClient();
-        okHttpClient.setConnectionPool(new ConnectionPool(config.getMaxConnections(), config.getKeepAliveTimeMillis()));
         this.httpClient = Feign.builder()
-                .client(new OkHttpClient(okHttpClient))
+                .client(createOkHttpClient(config))
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
                 .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
