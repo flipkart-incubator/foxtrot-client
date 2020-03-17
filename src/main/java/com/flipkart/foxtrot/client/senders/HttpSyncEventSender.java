@@ -19,20 +19,17 @@ import feign.FeignException;
 import feign.Response;
 import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-import javax.ws.rs.core.Response.Status.Family;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.core.Response.Status.Family;
+import java.io.IOException;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class HttpSyncEventSender extends EventSender {
 
@@ -51,7 +48,7 @@ public class HttpSyncEventSender extends EventSender {
 
 
     public HttpSyncEventSender(final FoxtrotClientConfig config, FoxtrotCluster client,
-            EventSerializationHandler serializationHandler) {
+                               EventSerializationHandler serializationHandler) {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
@@ -144,6 +141,11 @@ public class HttpSyncEventSender extends EventSender {
                     throw new RuntimeException(
                             String.format("table=%s event_send_failed status [%d] exception_message=%s", table,
                                     response.status(), throwableFailure.get()));
+                } else {
+                    logger.info(
+                            "table={} event_send_failed ignored host={} port={} statusCode={} reason={} response={}",
+                            table, clusterMember.getHost(), clusterMember.getPort(), response.status(),
+                            response.reason(), responseBody);
                 }
             } else {
                 throw new RuntimeException(
