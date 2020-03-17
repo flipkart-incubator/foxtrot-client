@@ -1,10 +1,10 @@
 package com.flipkart.foxtrot.client.util;
 
 import com.flipkart.foxtrot.client.FoxtrotClientConfig;
-import com.squareup.okhttp.internal.tls.OkHostnameVerifier;
 import feign.Client;
 import feign.okhttp.OkHttpClient;
 import okhttp3.ConnectionPool;
+import okhttp3.internal.tls.OkHostnameVerifier;
 
 import java.util.concurrent.TimeUnit;
 
@@ -21,19 +21,16 @@ public class CommonUtils {
      * @return {@link Client}
      */
     public static Client createOkHttpClient(FoxtrotClientConfig config) {
-        okhttp3.OkHttpClient.Builder clientBuilder = new okhttp3.OkHttpClient.Builder();
-        clientBuilder.retryOnConnectionFailure(true);
-        int connections = config.getMaxConnections();
-        int callTimeOutMs = config.getCallTimeOutMs();
-        int connTimeout = config.getConnectTimeoutMs();
-        int opTimeout = config.getOpTimeoutMs();
-        okhttp3.OkHttpClient client = clientBuilder.hostnameVerifier(OkHostnameVerifier.INSTANCE)
-                .connectionPool(new ConnectionPool(connections, config.getKeepAliveTimeMillis(), TimeUnit.SECONDS))
-                .connectTimeout(connTimeout, TimeUnit.MILLISECONDS)
-                .readTimeout(opTimeout, TimeUnit.MILLISECONDS)
-                .writeTimeout(opTimeout, TimeUnit.MILLISECONDS)
-                .callTimeout(callTimeOutMs, TimeUnit.MILLISECONDS)
+        okhttp3.OkHttpClient client = new okhttp3.OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .hostnameVerifier(OkHostnameVerifier.INSTANCE)
+                .connectionPool(new ConnectionPool(config.getMaxConnections(), config.getKeepAliveTimeMillis(), TimeUnit.SECONDS))
+                .connectTimeout(config.getConnectTimeoutMs(), TimeUnit.MILLISECONDS)
+                .readTimeout(config.getOpTimeoutMs(), TimeUnit.MILLISECONDS)
+                .writeTimeout(config.getOpTimeoutMs(), TimeUnit.MILLISECONDS)
+                .callTimeout(config.getCallTimeOutMs(), TimeUnit.MILLISECONDS)
                 .build();
+
         return new OkHttpClient(client);
     }
 }
