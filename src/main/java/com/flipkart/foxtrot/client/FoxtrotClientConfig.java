@@ -181,4 +181,22 @@ public class FoxtrotClientConfig {
         this.opTimeoutMs = opTimeoutMs;
     }
 
+    @Override
+    public String toString() {
+        return "FoxtrotClientConfig{" +
+                "table='" + table + '\'' +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", maxConnections=" + maxConnections +
+                ", keepAliveTimeMillis=" + keepAliveTimeMillis +
+                ", callTimeOutMs=" + callTimeOutMs +
+                ", connectTimeoutMs=" + connectTimeoutMs +
+                ", opTimeoutMs=" + opTimeoutMs +
+                ", refreshIntervalSecs=" + refreshIntervalSecs +
+                ", clientType=" + clientType +
+                ", queuePath='" + queuePath + '\'' +
+                ", batchSize=" + batchSize +
+                ", ignorableFailureMessagePatterns=" + ignorableFailureMessagePatterns +
+                '}';
+    }
 }
