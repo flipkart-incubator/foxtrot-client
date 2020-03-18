@@ -13,11 +13,9 @@ import com.flipkart.foxtrot.client.util.JsonUtils;
 import com.flipkart.foxtrot.core.querystore.impl.ElasticsearchQueryStore;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
-import com.squareup.okhttp.ConnectionPool;
 import feign.Feign;
 import feign.FeignException;
 import feign.Response;
-import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.util.Strings;
@@ -30,6 +28,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import static com.flipkart.foxtrot.client.util.CommonUtils.createOkHttpClient;
 
 public class HttpSyncEventSender extends EventSender {
 
@@ -52,10 +52,8 @@ public class HttpSyncEventSender extends EventSender {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
-        com.squareup.okhttp.OkHttpClient okHttpClient = new com.squareup.okhttp.OkHttpClient();
-        okHttpClient.setConnectionPool(new ConnectionPool(config.getMaxConnections(), config.getKeepAliveTimeMillis()));
         this.httpClient = Feign.builder()
-                .client(new OkHttpClient(okHttpClient))
+                .client(createOkHttpClient(config))
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
                 .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));
