@@ -23,9 +23,9 @@ public class FoxtrotClientConfig {
     private int port = 80;
 
     /**
-     * Maximum number of connections to establish for metadata polling. (Default: 10)
+     * Maximum number of connections to establish for metadata polling. (Default: 50)
      */
-    private int maxConnections = 10;
+    private int maxConnections = 50;
 
     /**
      * Connection keepalive time
