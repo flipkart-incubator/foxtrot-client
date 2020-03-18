@@ -32,8 +32,6 @@ public class FoxtrotClientConfig {
      */
     private long keepAliveTimeMillis = 30000;
 
-    private int callTimeOutMs = 2000;
-
     /**
      * time period in which our client should establish a connection with a target host
      */
@@ -157,14 +155,6 @@ public class FoxtrotClientConfig {
         this.ignorableFailureMessagePatterns = ignorableFailureMessagePatterns;
     }
 
-    public int getCallTimeOutMs() {
-        return callTimeOutMs;
-    }
-
-    public void setCallTimeOutMs(int callTimeOutMs) {
-        this.callTimeOutMs = callTimeOutMs;
-    }
-
     public int getConnectTimeoutMs() {
         return connectTimeoutMs;
     }
@@ -189,7 +179,6 @@ public class FoxtrotClientConfig {
                 ", port=" + port +
                 ", maxConnections=" + maxConnections +
                 ", keepAliveTimeMillis=" + keepAliveTimeMillis +
-                ", callTimeOutMs=" + callTimeOutMs +
                 ", connectTimeoutMs=" + connectTimeoutMs +
                 ", opTimeoutMs=" + opTimeoutMs +
                 ", refreshIntervalSecs=" + refreshIntervalSecs +

@@ -28,7 +28,6 @@ public class CommonUtils {
                 .connectTimeout(config.getConnectTimeoutMs(), TimeUnit.MILLISECONDS)
                 .readTimeout(config.getOpTimeoutMs(), TimeUnit.MILLISECONDS)
                 .writeTimeout(config.getOpTimeoutMs(), TimeUnit.MILLISECONDS)
-                .callTimeout(config.getCallTimeOutMs(), TimeUnit.MILLISECONDS)
                 .build();
 
         return new OkHttpClient(client);
