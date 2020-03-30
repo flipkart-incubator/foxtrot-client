@@ -6,7 +6,7 @@
 
     <groupId>com.foxtrot</groupId>
     <artifactId>foxtrot-client</artifactId>
-    <version>0.2.10</version>
+    <version>0.2.11</version>
 
     <properties>
         <feign.version>10.0.1</feign.version>
@@ -143,7 +143,7 @@
         <dependency>
             <groupId>com.flipkart.foxtrot</groupId>
             <artifactId>foxtrot-core</artifactId>
-            <version>6.3.1-39</version>
+            <version>6.3.1-49</version>
         </dependency>
         <dependency>
             <groupId>commons-io</groupId>
