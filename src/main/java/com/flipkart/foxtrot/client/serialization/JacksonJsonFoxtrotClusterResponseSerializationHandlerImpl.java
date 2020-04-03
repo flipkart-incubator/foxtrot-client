@@ -7,19 +7,14 @@ import com.flipkart.foxtrot.client.cluster.FoxtrotClusterStatus;
 import java.io.IOException;
 
 public class JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl implements FoxtrotClusterResponseSerializationHandler {
-    public static final FoxtrotClusterResponseSerializationHandler INSTANCE = new JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl();
-    private final ObjectMapper mapper;
 
     private JacksonJsonFoxtrotClusterResponseSerializationHandlerImpl() {
-        mapper = new ObjectMapper();
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     }
 
     @Override
     public FoxtrotClusterStatus deserialize(byte[] data) throws DeserializationException {
         try {
-            return mapper.readValue(data, FoxtrotClusterStatus.class);
+            return SerDe.mapper().readValue(data, FoxtrotClusterStatus.class);
         } catch (IOException e) {
             throw new DeserializationException("Could not deserialize foxtrot response: " + e.getLocalizedMessage(), e);
         }

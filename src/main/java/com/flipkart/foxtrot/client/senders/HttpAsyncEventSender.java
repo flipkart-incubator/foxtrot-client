@@ -10,10 +10,8 @@ import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.SerializationException;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.*;
-import com.squareup.okhttp.ConnectionPool;
 import feign.Feign;
 import feign.Response;
-import feign.okhttp.OkHttpClient;
 import feign.slf4j.Slf4jLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +20,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
+
+import static com.flipkart.foxtrot.client.util.CommonUtils.createOkHttpClient;
 
 public class HttpAsyncEventSender extends EventSender {
 
@@ -40,10 +40,8 @@ public class HttpAsyncEventSender extends EventSender {
         super(serializationHandler);
         this.table = config.getTable();
         this.client = client;
-        com.squareup.okhttp.OkHttpClient okHttpClient = new com.squareup.okhttp.OkHttpClient();
-        okHttpClient.setConnectionPool(new ConnectionPool(config.getMaxConnections(), config.getKeepAliveTimeMillis()));
         this.httpClient = Feign.builder()
-                .client(new OkHttpClient(okHttpClient))
+                .client(createOkHttpClient(config))
                 .logger(slf4jLogger)
                 .logLevel(feign.Logger.Level.BASIC)
                 .target(new FoxtrotTarget<>(FoxtrotHttpClient.class, "foxtrot", client));

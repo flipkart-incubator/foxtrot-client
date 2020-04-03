@@ -1,5 +1,8 @@
 package com.flipkart.foxtrot.client;
 
+import java.util.Collections;
+import java.util.List;
+
 /**
  * Configuration for the foxtrot client.
  */
@@ -20,9 +23,24 @@ public class FoxtrotClientConfig {
     private int port = 80;
 
     /**
-     * Maximum number of connections to establish for metadata polling. (Default: 10)
+     * Maximum number of connections to establish for metadata polling. (Default: 50)
      */
-    private int maxConnections = 10;
+    private int maxConnections = 50;
+
+    /**
+     * Connection keepalive time
+     */
+    private long keepAliveTimeMillis = 30000;
+
+    /**
+     * time period in which our client should establish a connection with a target host
+     */
+    private int connectTimeoutMs = 10000;
+
+    /**
+     * maximum time of inactivity between two data packets when waiting for the server's response.
+     */
+    private int opTimeoutMs = 10000;
 
     /**
      * Cluster metadata polling interval in seconds. (Default: 1 sec)
@@ -44,17 +62,15 @@ public class FoxtrotClientConfig {
     private String queuePath;
 
     /**
-     * Connection keepalive time
-     */
-    private long keepAliveTimeMillis = 30000;
-
-    /**
      * Used if clientType is {@link com.flipkart.foxtrot.client.ClientType#queued}
      * or {@link com.flipkart.foxtrot.client.ClientType#queued}
      * Number of messages to push per batch.
      * (Default: 200)
      */
     private int batchSize = 200;
+
+    private List<String> ignorableFailureMessagePatterns = Collections.emptyList();
+
 
     public FoxtrotClientConfig() {
     }
@@ -129,5 +145,47 @@ public class FoxtrotClientConfig {
 
     public void setKeepAliveTimeMillis(long keepAliveTimeMillis) {
         this.keepAliveTimeMillis = keepAliveTimeMillis;
+    }
+
+    public List<String> getIgnorableFailureMessagePatterns() {
+        return ignorableFailureMessagePatterns;
+    }
+
+    public void setIgnorableFailureMessagePatterns(List<String> ignorableFailureMessagePatterns) {
+        this.ignorableFailureMessagePatterns = ignorableFailureMessagePatterns;
+    }
+
+    public int getConnectTimeoutMs() {
+        return connectTimeoutMs;
+    }
+
+    public void setConnectTimeoutMs(int connectTimeoutMs) {
+        this.connectTimeoutMs = connectTimeoutMs;
+    }
+
+    public int getOpTimeoutMs() {
+        return opTimeoutMs;
+    }
+
+    public void setOpTimeoutMs(int opTimeoutMs) {
+        this.opTimeoutMs = opTimeoutMs;
+    }
+
+    @Override
+    public String toString() {
+        return "FoxtrotClientConfig{" +
+                "table='" + table + '\'' +
+                ", host='" + host + '\'' +
+                ", port=" + port +
+                ", maxConnections=" + maxConnections +
+                ", keepAliveTimeMillis=" + keepAliveTimeMillis +
+                ", connectTimeoutMs=" + connectTimeoutMs +
+                ", opTimeoutMs=" + opTimeoutMs +
+                ", refreshIntervalSecs=" + refreshIntervalSecs +
+                ", clientType=" + clientType +
+                ", queuePath='" + queuePath + '\'' +
+                ", batchSize=" + batchSize +
+                ", ignorableFailureMessagePatterns=" + ignorableFailureMessagePatterns +
+                '}';
     }
 }

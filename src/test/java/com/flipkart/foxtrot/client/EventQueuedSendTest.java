@@ -33,7 +33,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class EventQueuedSendTest extends BaseTest {
 
-    private TestHostPort testHostPort = new TestHostPort("localhost", 8888);
+    private TestHostPort testHostPort = new TestHostPort("localhost", 17000);
 
     @Test
     public void testQueuedSend() throws Exception {

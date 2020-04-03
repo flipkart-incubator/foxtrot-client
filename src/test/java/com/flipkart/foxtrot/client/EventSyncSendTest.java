@@ -23,6 +23,8 @@ import com.flipkart.foxtrot.client.cluster.FoxtrotClusterMember;
 import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
+import java.util.Arrays;
+import java.util.Collections;
 import org.junit.Test;
 
 import java.util.List;
@@ -34,13 +36,14 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 
 public class EventSyncSendTest extends BaseTest {
 
-    private TestHostPort testHostPort = new TestHostPort("localhost", 8888);
+    private TestHostPort testHostPort = new TestHostPort("localhost", 17000);
 
     @Test
     public void testSyncSend() throws Exception {
         FoxtrotClientConfig clientConfig = new FoxtrotClientConfig();
         clientConfig.setHost(testHostPort.getHostName());
         clientConfig.setPort(testHostPort.getPort());
+        clientConfig.setIgnorableFailureMessagePatterns(Collections.singletonList("timeout"));
         clientConfig.setTable("test");
         FoxtrotCluster foxtrotCluster = new FoxtrotCluster(clientConfig, new MemberSelector() {
             @Override

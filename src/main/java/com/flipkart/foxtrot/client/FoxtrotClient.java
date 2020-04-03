@@ -1,5 +1,7 @@
 package com.flipkart.foxtrot.client;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.foxtrot.client.cluster.FoxtrotCluster;
 import com.flipkart.foxtrot.client.selectors.MemberSelector;
 import com.flipkart.foxtrot.client.selectors.RandomSelector;
@@ -8,6 +10,7 @@ import com.flipkart.foxtrot.client.senders.HttpSyncEventSender;
 import com.flipkart.foxtrot.client.senders.QueuedSender;
 import com.flipkart.foxtrot.client.serialization.EventSerializationHandler;
 import com.flipkart.foxtrot.client.serialization.JacksonJsonSerializationHandler;
+import com.flipkart.foxtrot.client.serialization.SerDe;
 import com.flipkart.foxtrot.client.util.TypeChecker;
 import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
@@ -16,17 +19,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class FoxtrotClient {
+
     private final FoxtrotCluster foxtrotCluster;
     private final EventSender eventSender;
 
     public FoxtrotClient(FoxtrotClientConfig config) throws Exception {
         this(config, new RandomSelector(), JacksonJsonSerializationHandler.INSTANCE);
+        SerDe.init(objectMapper());
     }
 
     public FoxtrotClient(FoxtrotClientConfig config,
-                         MemberSelector memberSelector,
-                         EventSerializationHandler serializationHandler) throws Exception {
+            MemberSelector memberSelector,
+            EventSerializationHandler serializationHandler) throws Exception {
         this.foxtrotCluster = new FoxtrotCluster(config, memberSelector);
+        SerDe.init(objectMapper());
         Preconditions.checkNotNull(config.getTable());
         Preconditions.checkNotNull(config.getClientType());
         Preconditions.checkNotNull(config.getHost());
@@ -49,7 +55,8 @@ public class FoxtrotClient {
                 if (!messages.isEmpty()) {
                     throw new Exception(messages.toString());
                 }
-                this.eventSender = new QueuedSender(new HttpSyncEventSender(config, foxtrotCluster, serializationHandler),
+                this.eventSender = new QueuedSender(
+                        new HttpSyncEventSender(config, foxtrotCluster, serializationHandler),
                         serializationHandler,
                         config.getQueuePath(),
                         config.getBatchSize()
@@ -69,6 +76,7 @@ public class FoxtrotClient {
     public FoxtrotClient(FoxtrotCluster foxtrotCluster, EventSender eventSender) {
         this.foxtrotCluster = foxtrotCluster;
         this.eventSender = eventSender;
+        SerDe.init(objectMapper());
     }
 
     public void send(Document document) throws Exception {
@@ -96,5 +104,12 @@ public class FoxtrotClient {
     public void close() throws Exception {
         eventSender.close();
         foxtrotCluster.stop();
+    }
+
+    private static ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+        return mapper;
     }
 }

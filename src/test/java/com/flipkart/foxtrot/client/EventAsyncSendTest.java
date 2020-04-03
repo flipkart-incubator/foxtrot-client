@@ -30,7 +30,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 
 public class EventAsyncSendTest extends BaseTest {
 
-    private TestHostPort testHostPort = new TestHostPort("localhost", 8888);
+    private TestHostPort testHostPort = new TestHostPort("localhost", 17000);
 
     @Test
     public void testAsyncSend() throws Exception {
