@@ -11,7 +11,7 @@
     <properties>
         <feign.version>8.15.1</feign.version>
         <wiremock.version>1.58</wiremock.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
